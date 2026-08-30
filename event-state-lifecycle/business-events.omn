@@ -1,0 +1,164 @@
+Prefix: : <https://finsight-tech.com/ontology/examples/business-events#>
+Prefix: xsd: <http://www.w3.org/2001/XMLSchema#>
+
+Ontology: <https://finsight-tech.com/ontology/examples/business-events>
+
+
+# ************************************************************************
+# Business Events - Financial Occurrences
+# ************************************************************************
+#
+# Models financially meaningful occurrences such as trade execution,
+# payment and settlement. The example distinguishes business events from
+# notifications, system updates, workflow tasks and resulting states.
+#
+
+Datatype: xsd:dateTime
+
+### Core financial concepts
+
+Class: Party
+
+Class: Security
+
+Class: PaymentObligation
+
+Class: SettlementInstruction
+
+Class: Contract
+
+
+### Business events
+
+Class: BusinessEvent
+
+Class: TradeExecution
+    SubClassOf: BusinessEvent
+
+Class: Payment
+    SubClassOf: BusinessEvent
+
+Class: Settlement
+    SubClassOf: BusinessEvent
+
+Class: AmendmentEvent
+    SubClassOf: BusinessEvent
+
+
+### Event timing
+
+# occurredAt represents the time of the occurrence in this focused example.
+# Effective time and system-recorded time may be different and are modelled
+# separately when those distinctions matter.
+
+DataProperty: occurredAt
+    Domain: BusinessEvent
+    Range: xsd:dateTime
+
+
+### Trade execution relationships
+
+ObjectProperty: hasBuyer
+    Domain: TradeExecution
+    Range: Party
+
+ObjectProperty: hasSeller
+    Domain: TradeExecution
+    Range: Party
+
+ObjectProperty: executedSecurity
+    Domain: TradeExecution
+    Range: Security
+
+
+### Payment relationships
+
+ObjectProperty: hasPayer
+    Domain: Payment
+    Range: Party
+
+ObjectProperty: hasPayee
+    Domain: Payment
+    Range: Party
+
+ObjectProperty: appliedTo
+    Domain: Payment
+    Range: PaymentObligation
+
+
+### Settlement relationships
+
+ObjectProperty: settlesInstruction
+    Domain: Settlement
+    Range: SettlementInstruction
+
+
+### Amendment relationships
+
+ObjectProperty: amends
+    Domain: AmendmentEvent
+    Range: Contract
+
+
+### Focused event semantics
+
+Class: BilateralTradeExecution
+    SubClassOf:
+        TradeExecution,
+        hasBuyer exactly 1 Party,
+        hasSeller exactly 1 Party,
+        executedSecurity exactly 1 Security
+
+Class: PaymentAgainstObligation
+    SubClassOf:
+        Payment,
+        hasPayer exactly 1 Party,
+        hasPayee exactly 1 Party,
+        appliedTo exactly 1 PaymentObligation
+
+
+### Observation and system-recording concepts
+
+# These concepts are intentionally shallow. They are included only to show
+# that learning about an occurrence and recording it are not the occurrence
+# itself.
+
+Class: SettlementConfirmationReceived
+
+Class: SystemStatusUpdate
+
+ObjectProperty: reportsSettlement
+    Domain: SettlementConfirmationReceived
+    Range: Settlement
+
+ObjectProperty: recordsSettlement
+    Domain: SystemStatusUpdate
+    Range: Settlement
+
+
+### Workflow concepts
+
+# A workflow task describes work to be performed. It is not the same thing
+# as the business event that may result from that work.
+
+Class: WorkflowTask
+
+Class: SubmitSettlementInstructionTask
+    SubClassOf: WorkflowTask
+
+ObjectProperty: actsOn
+    Domain: WorkflowTask
+    Range: SettlementInstruction
+
+
+### Modelling boundaries
+
+# BusinessEvent                  - a financially meaningful occurrence
+# SettlementConfirmationReceived - information that a settlement occurred
+# SystemStatusUpdate             - a change in a system representation
+# WorkflowTask                   - work that should be performed
+#
+# These concepts are related but should not be collapsed into one event type.
+#
+# The file also does not model resulting states such as Settled or Satisfied.
+# Event-to-state semantics belong to the next modelling problem.

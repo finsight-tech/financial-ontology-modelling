@@ -1,0 +1,84 @@
+Prefix: : <https://finsight-tech.com/ontology/examples/guarantee-relationship#>
+
+Ontology: <https://finsight-tech.com/ontology/examples/guarantee-relationship>
+
+
+# ************************************************************************
+# Guarantee Relationship - Direct and Explicit Forms
+# ************************************************************************
+#
+# Shows two valid ways to represent guarantee semantics. A direct typed
+# relationship may be sufficient when only the guarantor and obligation
+# matter. An explicit relationship context becomes useful when the
+# particular guarantee itself carries additional meaning.
+#
+
+
+### Core concepts
+
+Class: LegalEntity
+
+Class: Obligation
+
+
+### Form 1 - Direct typed relationship
+
+ObjectProperty: guarantees
+    Domain: LegalEntity
+    Range: Obligation
+
+
+### Form 2 - Explicit relationship context
+
+Class: GuaranteeRelationship
+
+Class: GuaranteeAgreement
+
+Class: GuaranteeScope
+
+Class: TimePeriod
+
+Class: GuaranteeStatus
+
+
+ObjectProperty: guarantor
+    Domain: GuaranteeRelationship
+    Range: LegalEntity
+
+ObjectProperty: guaranteedObligation
+    Domain: GuaranteeRelationship
+    Range: Obligation
+
+ObjectProperty: governedBy
+    Domain: GuaranteeRelationship
+    Range: GuaranteeAgreement
+
+ObjectProperty: hasScope
+    Domain: GuaranteeRelationship
+    Range: GuaranteeScope
+
+ObjectProperty: validDuring
+    Domain: GuaranteeRelationship
+    Range: TimePeriod
+
+ObjectProperty: hasStatus
+    Domain: GuaranteeRelationship
+    Range: GuaranteeStatus
+
+
+### Core relationship semantics
+
+Class: GuaranteeRelationship
+    SubClassOf:
+        guarantor exactly 1 LegalEntity,
+        guaranteedObligation exactly 1 Obligation
+
+
+### Modelling boundary
+
+# Agreement, scope, time and status are intentionally shallow here.
+# They are included only to show why the relationship itself may need
+# first-class treatment.
+#
+# The GuaranteeRelationship is not the same thing as an event that creates,
+# amends or terminates it. Event semantics belong to later articles.

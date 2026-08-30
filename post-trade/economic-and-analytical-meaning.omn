@@ -1,0 +1,181 @@
+Prefix: : <https://finsight-tech.com/ontology/examples/economic-and-analytical-meaning#>
+Prefix: xsd: <http://www.w3.org/2001/XMLSchema#>
+
+Ontology: <https://finsight-tech.com/ontology/examples/economic-and-analytical-meaning>
+
+
+# ************************************************************************
+# Economic Situation, Observation and Analytical Meaning
+# ************************************************************************
+#
+# Provides a panoramic model of what may appear after a trade: positions,
+# obligations, payments, observations and analytical results. The file keeps
+# these concepts distinct without trying to solve each modelling problem yet.
+#
+
+Datatype: xsd:dateTime
+Datatype: xsd:decimal
+
+
+### Core financial concepts
+
+Class: Portfolio
+
+Class: Security
+
+Class: Trade
+
+# Position is intentionally shallow here. The next modelling problem will
+# examine whether a position is a continuing thing, a relationship, an
+# aggregation, an observation or some combination of these ideas.
+
+Class: Position
+
+
+### Economic relationships
+
+ObjectProperty: heldBy
+    Domain: Position
+    Range: Portfolio
+
+ObjectProperty: positionIn
+    Domain: Position
+    Range: Security
+
+
+### Obligations and actual payment
+
+Class: PaymentObligation
+
+Class: BusinessEvent
+
+Class: Payment
+    SubClassOf: BusinessEvent
+
+ObjectProperty: appliedTo
+    Domain: Payment
+    Range: PaymentObligation
+
+
+### Observations
+
+Class: Observation
+
+Class: PositionObservation
+    SubClassOf: Observation
+
+ObjectProperty: observesPosition
+    Domain: PositionObservation
+    Range: Position
+
+DataProperty: observedQuantity
+    Domain: PositionObservation
+    Range: xsd:decimal
+
+DataProperty: observedAt
+    Domain: Observation
+    Range: xsd:dateTime
+
+
+### Analytical measurements
+
+Class: AnalyticalMeasurement
+
+Class: ValuationMeasurement
+    SubClassOf: AnalyticalMeasurement
+
+Class: PnLMeasurement
+    SubClassOf: AnalyticalMeasurement
+
+Class: RiskMeasurement
+    SubClassOf: AnalyticalMeasurement
+
+
+### Analytical results
+
+Class: AnalyticalResult
+
+Class: ValuationResult
+    SubClassOf: AnalyticalResult
+
+Class: PnLResult
+    SubClassOf: AnalyticalResult
+
+Class: RiskResult
+    SubClassOf: AnalyticalResult
+
+DataProperty: resultAmount
+    Domain: AnalyticalResult
+    Range: xsd:decimal
+
+
+### Measurement subjects and results
+
+ObjectProperty: analysesPosition
+    Domain: AnalyticalMeasurement
+    Range: Position
+
+ObjectProperty: analysesPortfolio
+    Domain: AnalyticalMeasurement
+    Range: Portfolio
+
+ObjectProperty: produces
+    Domain: AnalyticalMeasurement
+    Range: AnalyticalResult
+
+Class: PositionValuation
+    SubClassOf:
+        ValuationMeasurement,
+        analysesPosition exactly 1 Position,
+        produces some ValuationResult
+
+Class: PositionPnLMeasurement
+    SubClassOf:
+        PnLMeasurement,
+        analysesPosition exactly 1 Position,
+        produces some PnLResult
+
+Class: PortfolioRiskMeasurement
+    SubClassOf:
+        RiskMeasurement,
+        analysesPortfolio exactly 1 Portfolio,
+        produces some RiskResult
+
+
+### Analytical inputs and methods
+
+Class: AnalyticalInput
+
+Class: MarketObservation
+    SubClassOf:
+        Observation,
+        AnalyticalInput
+
+Class: ValuationMethod
+
+Class: RiskMethod
+
+ObjectProperty: usesInput
+    Domain: AnalyticalMeasurement
+    Range: AnalyticalInput
+
+ObjectProperty: usesValuationMethod
+    Domain: ValuationMeasurement
+    Range: ValuationMethod
+
+ObjectProperty: usesRiskMethod
+    Domain: RiskMeasurement
+    Range: RiskMethod
+
+
+### Scenario context
+
+Class: Scenario
+
+ObjectProperty: underScenario
+    Domain: AnalyticalMeasurement
+    Range: Scenario
+
+# A Scenario represents hypothetical analytical context. It is not an
+# observation that the assumed market movement actually occurred.
+

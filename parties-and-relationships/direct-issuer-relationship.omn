@@ -1,0 +1,48 @@
+Prefix: : <https://finsight-tech.com/ontology/examples/parties-and-roles#>
+
+Ontology: <https://finsight-tech.com/ontology/examples/parties-and-roles/direct-issuer-relationship>
+
+# ============================================================
+# Direct relationship form
+#
+# Smallest sufficient model for the question:
+# "Which party is the issuer for a securities issuance?"
+# ============================================================
+
+
+# Party is used here as a scoped upper-level participant category.
+Class: Party
+
+Class: Organisation
+    SubClassOf:
+        Party
+
+Class: Person
+    SubClassOf:
+        Party
+    DisjointWith:
+        Organisation
+
+
+# In this example LegalEntity means an organisational legal entity.
+Class: LegalEntity
+    SubClassOf:
+        Organisation
+
+Class: SecuritiesIssuance
+
+Class: Security
+
+
+# A typed relationship can carry the issuer meaning directly.
+ObjectProperty: issuerOf
+    Domain:
+        Party
+    Range:
+        SecuritiesIssuance
+
+ObjectProperty: issues
+    Domain:
+        SecuritiesIssuance
+    Range:
+        Security

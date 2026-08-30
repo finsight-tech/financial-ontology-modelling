@@ -1,0 +1,137 @@
+Prefix: : <https://finsight-tech.com/ontology/examples/security-identity-boundaries#>
+Prefix: xsd: <http://www.w3.org/2001/XMLSchema#>
+
+Ontology: <https://finsight-tech.com/ontology/examples/security-identity-boundaries>
+
+
+# ************************************************************************
+# Security Identity Boundaries
+# ************************************************************************
+#
+# Models the distinction between a Security and the identifiers, identifier
+# assignments, system records and market listings that refer to or represent
+# it. The example focuses on identity boundaries rather than lifecycle.
+#
+
+Datatype: xsd:date
+Datatype: xsd:decimal
+Datatype: xsd:string
+
+### Financial things
+
+Class: FinancialThing
+
+Class: Security
+    SubClassOf: FinancialThing
+
+Class: Listing
+    SubClassOf: FinancialThing
+
+Class: TradingVenue
+    SubClassOf: FinancialThing
+
+
+### Identifiers and identification schemes
+
+Class: Identifier
+
+Class: IdentifierScheme
+
+DataProperty: identifierValue
+    Domain: Identifier
+    Range: xsd:string
+
+ObjectProperty: governedByScheme
+    Domain: Identifier
+    Range: IdentifierScheme
+
+ObjectProperty: identifiedBy
+    Domain: Security
+    Range: Identifier
+
+
+### Identifier assignment
+
+# A direct Security-to-Identifier relationship may be enough for a simple
+# ontology. IdentifierAssignment becomes useful when the assignment itself
+# needs authority, scope, temporal context or provenance.
+
+Class: IdentifierAssignment
+
+Class: AssignmentAuthority
+
+Class: TemporalContext
+
+ObjectProperty: hasIdentifierAssignment
+    Domain: Security
+    Range: IdentifierAssignment
+
+ObjectProperty: identifies
+    Domain: IdentifierAssignment
+    Range: Security
+
+ObjectProperty: usesIdentifier
+    Domain: IdentifierAssignment
+    Range: Identifier
+
+ObjectProperty: underScheme
+    Domain: IdentifierAssignment
+    Range: IdentifierScheme
+
+ObjectProperty: assignedBy
+    Domain: IdentifierAssignment
+    Range: AssignmentAuthority
+
+ObjectProperty: hasTemporalContext
+    Domain: IdentifierAssignment
+    Range: TemporalContext
+
+
+### Core identifier-assignment semantics
+
+Class: SecurityIdentifierAssignment
+    SubClassOf:
+        IdentifierAssignment,
+        identifies exactly 1 Security,
+        usesIdentifier exactly 1 Identifier,
+        underScheme exactly 1 IdentifierScheme
+
+
+### System records
+
+Class: SystemRecord
+
+ObjectProperty: represents
+    Domain: SystemRecord
+    Range: FinancialThing
+
+
+### Security listings
+
+ObjectProperty: hasListing
+    Domain: Security
+    Range: Listing
+
+ObjectProperty: admittedTo
+    Domain: Listing
+    Range: TradingVenue
+
+DataProperty: tickerSymbol
+    Domain: Listing
+    Range: xsd:string
+
+
+### Identity boundaries expressed by the model
+
+# Security, Identifier, IdentifierAssignment, SystemRecord and Listing are
+# modelled as distinct concepts because they answer different questions:
+#
+# Security             - What is the financial thing?
+# Identifier           - What value identifies or refers to it?
+# IdentifierAssignment - In what assignment context is an identifier used?
+# SystemRecord         - What information-system artefact represents it?
+# Listing              - What market-specific presence does it have?
+#
+# No broad DisjointClasses axiom is added here. The important modelling
+# lesson is the distinction in meaning, not a blanket logical separation
+# between every category in every possible ontology.

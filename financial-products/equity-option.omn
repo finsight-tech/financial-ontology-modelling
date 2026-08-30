@@ -1,0 +1,53 @@
+Prefix: : <https://finsight-tech.com/ontology/examples/real-product-models/equity-option#>
+
+Ontology: <https://finsight-tech.com/ontology/examples/real-product-models/equity-option>
+
+
+# ************************************************************************
+# Equity Option - Product Modelling Experiment
+# ************************************************************************
+#
+# Models an equity option through its underlier reference and contractual
+# strike, exercise and settlement terms. The underlier is referenced by
+# the option rather than modelled as one of its components.
+#
+
+
+### Product and referenced underlier
+
+Class: Equity
+
+Class: EquityOption
+    SubClassOf:
+        referencesUnderlier some Equity,
+        hasStrikeTerms some StrikeTerms,
+        hasExerciseTerms some ExerciseTerms,
+        hasSettlementTerms some SettlementTerms
+
+
+### Contractual terms
+
+Class: StrikeTerms
+
+Class: ExerciseTerms
+
+Class: SettlementTerms
+
+
+### Product relationships
+
+ObjectProperty: referencesUnderlier
+    Domain: EquityOption
+    Range: Equity
+
+ObjectProperty: hasStrikeTerms
+    Domain: EquityOption
+    Range: StrikeTerms
+
+ObjectProperty: hasExerciseTerms
+    Domain: EquityOption
+    Range: ExerciseTerms
+
+ObjectProperty: hasSettlementTerms
+    Domain: EquityOption
+    Range: SettlementTerms

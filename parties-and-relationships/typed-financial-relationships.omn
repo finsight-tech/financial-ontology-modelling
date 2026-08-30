@@ -1,0 +1,84 @@
+Prefix: : <https://finsight-tech.com/ontology/examples/typed-relationships#>
+
+Ontology: <https://finsight-tech.com/ontology/examples/typed-relationships>
+
+
+# ************************************************************************
+# Typed Financial Relationships
+# ************************************************************************
+#
+# Shows why financial relationships should be named according to their
+# business meaning rather than collapsed into a generic relatedTo property.
+# The example also introduces inverse relationships.
+#
+
+
+### Core concepts
+
+Class: Security
+
+Class: Identifier
+
+Class: Listing
+
+Class: TradingVenue
+
+Class: SystemRecord
+
+Class: Equity
+
+Class: EquityOption
+
+
+### Security identification
+
+ObjectProperty: identifiedBy
+    Domain: Security
+    Range: Identifier
+
+
+### Security listing
+
+ObjectProperty: hasListing
+    Domain: Security
+    Range: Listing
+    InverseOf: listedSecurity
+
+ObjectProperty: listedSecurity
+    Domain: Listing
+    Range: Security
+
+
+### Listing venue
+
+ObjectProperty: admittedTo
+    Domain: Listing
+    Range: TradingVenue
+
+
+### System representation
+
+ObjectProperty: represents
+    Domain: SystemRecord
+    Range: Security
+
+
+### Product reference
+
+ObjectProperty: referencesUnderlier
+    Domain: EquityOption
+    Range: Equity
+
+
+### Modelling point
+
+# These relationships connect different kinds of concepts for different
+# reasons. The property name is part of the financial meaning:
+#
+# identifiedBy        - identification
+# hasListing          - market presence
+# admittedTo          - venue association
+# represents          - information-system representation
+# referencesUnderlier - economic reference
+#
+# A generic relatedTo property would hide these distinctions.

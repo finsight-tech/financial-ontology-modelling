@@ -1,0 +1,107 @@
+Prefix: : <https://finsight-tech.com/ontology/examples/product-classification-dimensions#>
+
+Ontology: <https://finsight-tech.com/ontology/examples/product-classification-dimensions>
+
+
+# ************************************************************************
+# Bond Classification Dimensions
+# ************************************************************************
+#
+# Models several independent ways of classifying a bond, including rate
+# structure, optionality, seniority and security status. Useful product
+# categories can still be defined from these dimensions.
+#
+
+
+Class: FinancialProduct
+
+Class: Bond
+    SubClassOf: FinancialProduct
+
+
+### Classification dimensions
+
+Class: RateStructure
+
+Class: FixedRate
+    SubClassOf: RateStructure
+
+Class: FloatingRate
+    SubClassOf: RateStructure
+
+DisjointClasses:
+    FixedRate,
+    FloatingRate
+
+
+Class: Optionality
+
+Class: Callable
+    SubClassOf: Optionality
+
+Class: NonCallable
+    SubClassOf: Optionality
+
+DisjointClasses:
+    Callable,
+    NonCallable
+
+
+Class: Seniority
+
+Class: Senior
+    SubClassOf: Seniority
+
+Class: Subordinated
+    SubClassOf: Seniority
+
+
+Class: SecurityStatus
+
+Class: Secured
+    SubClassOf: SecurityStatus
+
+Class: Unsecured
+    SubClassOf: SecurityStatus
+
+
+### Classification relationships
+
+ObjectProperty: hasRateStructure
+    Domain: Bond
+    Range: RateStructure
+
+ObjectProperty: hasOptionality
+    Domain: Bond
+    Range: Optionality
+
+ObjectProperty: hasSeniority
+    Domain: Bond
+    Range: Seniority
+
+ObjectProperty: hasSecurityStatus
+    Domain: Bond
+    Range: SecurityStatus
+
+
+### Product categories derived from classification dimensions
+
+Class: FixedRateBond
+    EquivalentTo:
+        Bond and hasRateStructure some FixedRate
+
+Class: CallableBond
+    EquivalentTo:
+        Bond and hasOptionality some Callable
+
+
+### Reasoner experiment
+
+# A reasoner should infer that this class is a subclass of both
+# FixedRateBond and CallableBond.
+
+Class: CallableFixedRateBondExample
+    SubClassOf:
+        Bond,
+        hasRateStructure some FixedRate,
+        hasOptionality some Callable

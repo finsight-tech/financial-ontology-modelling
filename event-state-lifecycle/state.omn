@@ -1,0 +1,172 @@
+Prefix: : <https://finsight-tech.com/ontology/examples/settlement-lifecycle-condition#>
+Prefix: xsd: <http://www.w3.org/2001/XMLSchema#>
+
+Ontology: <https://finsight-tech.com/ontology/examples/settlement-lifecycle-condition>
+
+
+# ************************************************************************
+# Settlement Lifecycle Condition
+# ************************************************************************
+#
+# Models the distinction between an attempt outcome, the continuing business
+# condition of a settlement, a workflow condition and a recorded system
+# status. It also shows when a condition episode may need first-class treatment.
+#
+
+Datatype: xsd:string
+
+### Core financial concepts
+
+Class: Settlement
+
+Class: SettlementAttempt
+
+Class: SettlementInstruction
+
+Class: PaymentObligation
+
+Class: BusinessEvent
+
+
+### Attempt outcomes
+
+Class: AttemptOutcome
+
+Class: FailedOutcome
+    SubClassOf: AttemptOutcome
+
+Class: SuccessfulOutcome
+    SubClassOf: AttemptOutcome
+
+ObjectProperty: hasOutcome
+    Domain: SettlementAttempt
+    Range: AttemptOutcome
+
+
+### Lifecycle conditions
+
+Class: LifecycleCondition
+
+Class: SettlementCondition
+    SubClassOf: LifecycleCondition
+
+Class: OutstandingSettlementCondition
+    SubClassOf: SettlementCondition
+
+Class: SettledSettlementCondition
+    SubClassOf: SettlementCondition
+
+Class: InstructionCondition
+    SubClassOf: LifecycleCondition
+
+Class: ActiveInstructionCondition
+    SubClassOf: InstructionCondition
+
+Class: ObligationCondition
+    SubClassOf: LifecycleCondition
+
+Class: UndischargedObligationCondition
+    SubClassOf: ObligationCondition
+
+
+### Direct condition relationships
+
+ObjectProperty: hasSettlementCondition
+    Domain: Settlement
+    Range: SettlementCondition
+
+ObjectProperty: hasInstructionCondition
+    Domain: SettlementInstruction
+    Range: InstructionCondition
+
+ObjectProperty: hasObligationCondition
+    Domain: PaymentObligation
+    Range: ObligationCondition
+
+
+### Failed-attempt classification
+
+# A failed attempt is defined by its outcome. This does not imply that the
+# Settlement itself has a corresponding "failed" lifecycle condition.
+
+Class: FailedSettlementAttempt
+    EquivalentTo:
+        SettlementAttempt and hasOutcome some FailedOutcome
+
+
+### Explicit condition episode
+
+# Use a condition episode only when a particular period of a condition needs
+# to be described in its own right. Detailed temporal extent is deferred.
+
+Class: SettlementConditionEpisode
+    SubClassOf:
+        conditionOf exactly 1 Settlement,
+        hasCondition exactly 1 SettlementCondition
+
+ObjectProperty: conditionOf
+    Domain: SettlementConditionEpisode
+    Range: Settlement
+
+ObjectProperty: hasCondition
+    Domain: SettlementConditionEpisode
+    Range: SettlementCondition
+
+ObjectProperty: establishedBy
+    Domain: SettlementConditionEpisode
+    Range: BusinessEvent
+
+ObjectProperty: endedBy
+    Domain: SettlementConditionEpisode
+    Range: BusinessEvent
+
+
+### Workflow and system status
+
+# These concepts are intentionally shallow. They show that operational
+# processing condition and recorded status are not automatically the same
+# as the business condition of the settlement.
+
+Class: WorkflowTask
+
+Class: WorkflowCondition
+
+Class: RetryingWorkflowCondition
+    SubClassOf: WorkflowCondition
+
+ObjectProperty: hasWorkflowCondition
+    Domain: WorkflowTask
+    Range: WorkflowCondition
+
+Class: SystemRecord
+
+DataProperty: statusCode
+    Domain: SystemRecord
+    Range: xsd:string
+
+
+### Modelling boundaries
+
+# SettlementAttempt
+#     hasOutcome -> FailedOutcome
+#
+# does not imply:
+#
+# Settlement
+#     hasSettlementCondition -> a "FailedSettlementCondition"
+#
+# The Settlement may instead remain:
+#
+# Settlement
+#     hasSettlementCondition -> OutstandingSettlementCondition
+#
+# At the same time:
+#
+# WorkflowTask
+#     hasWorkflowCondition -> RetryingWorkflowCondition
+#
+# SystemRecord
+#     statusCode -> "FAILED"
+#
+# Event outcome, business condition, workflow condition and recorded status
+# are therefore represented as different kinds of meaning.

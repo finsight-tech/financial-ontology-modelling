@@ -1,0 +1,94 @@
+Prefix: : <https://finsight-tech.com/ontology/examples/real-product-models/bond#>
+
+Ontology: <https://finsight-tech.com/ontology/examples/real-product-models/fixed-rate-bond>
+
+
+# ************************************************************************
+# Fixed-Rate Bond - Product Modelling Experiment
+# ************************************************************************
+#
+# Combines issuance semantics with the economic terms of a fixed-rate bond.
+# The example is intentionally focused and does not attempt to provide a
+# complete ontology for bonds.
+#
+
+
+### Parties and issuance
+
+Class: Party
+
+Class: LegalEntity
+    SubClassOf: Party
+
+Class: SecuritiesIssuance
+
+Class: Security
+
+Class: Bond
+    SubClassOf: Security
+
+ObjectProperty: issuerOf
+    Domain: Party
+    Range: SecuritiesIssuance
+
+ObjectProperty: issues
+    Domain: SecuritiesIssuance
+    Range: Security
+
+
+### Bond economic terms
+
+Class: PrincipalTerms
+
+Class: InterestTerms
+
+Class: FixedRateInterestTerms
+    SubClassOf: InterestTerms
+
+Class: MaturityTerms
+
+Class: PaymentSchedule
+
+Class: CalculationBasis
+
+Class: FixedRate
+
+
+### Economic relationships
+
+ObjectProperty: hasPrincipalTerms
+    Domain: Bond
+    Range: PrincipalTerms
+
+ObjectProperty: hasInterestTerms
+    Domain: Bond
+    Range: InterestTerms
+
+ObjectProperty: hasMaturityTerms
+    Domain: Bond
+    Range: MaturityTerms
+
+ObjectProperty: hasFixedRate
+    Domain: FixedRateInterestTerms
+    Range: FixedRate
+
+ObjectProperty: usesCalculationBasis
+    Domain: FixedRateInterestTerms
+    Range: CalculationBasis
+
+ObjectProperty: hasPaymentSchedule
+    Domain: FixedRateInterestTerms
+    Range: PaymentSchedule
+
+
+### Product type described through its economic structure
+
+Class: FixedRateBond
+    EquivalentTo:
+        Bond and hasInterestTerms some FixedRateInterestTerms
+
+Class: FixedRateInterestTerms
+    SubClassOf:
+        hasFixedRate some FixedRate,
+        usesCalculationBasis some CalculationBasis,
+        hasPaymentSchedule some PaymentSchedule

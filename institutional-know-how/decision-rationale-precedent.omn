@@ -1,0 +1,397 @@
+Prefix: : <https://finsight-tech.com/ontology/examples/decision-rationale-precedent#>
+Prefix: xsd: <http://www.w3.org/2001/XMLSchema#>
+
+Ontology: <https://finsight-tech.com/ontology/examples/decision-rationale-precedent>
+
+
+# ************************************************************************
+# Decision, Rationale and Precedent Use
+# ************************************************************************
+#
+# Models how a previous settlement decision may later be used in another
+# decision. It separates the historical decision, its outcome and rationale
+# from the later judgement that the earlier decision is relevant.
+#
+
+Datatype: xsd:dateTime
+Datatype: xsd:decimal
+
+### Settlement context
+
+Class: Situation
+
+Class: SettlementSituation
+    SubClassOf:
+        Situation
+
+Class: SSIAccountMismatchSituation
+    SubClassOf:
+        SettlementSituation
+
+Class: ClientMigrationSituation
+    SubClassOf:
+        SettlementSituation
+
+# Two situations may look similar while differing in a fact that was
+# decisive to the earlier decision.
+
+
+### Business rules
+
+Class: BusinessRule
+
+Class: SettlementSSIRule
+    SubClassOf:
+        BusinessRule
+
+# Example meaning:
+#
+# Use the SSI applicable on the settlement date
+# unless an authorised exception exists.
+#
+# A previous approval does not itself create or replace this rule.
+
+
+### Authority assignment
+
+Class: AuthorityAssignment
+
+Class: SettlementExceptionAuthorityAssignment
+    SubClassOf:
+        AuthorityAssignment
+
+# AuthorityAssignment is reused from the authority modelling pattern.
+#
+# AuthorityAssignment
+#     !=
+# Decision
+
+
+### Decisions
+
+Class: Decision
+
+Class: SettlementExceptionDecision
+    SubClassOf:
+        Decision
+
+ObjectProperty: concernsSituation
+    Domain: Decision
+    Range: Situation
+
+ObjectProperty: consideredUnderRule
+    Domain: Decision
+    Range: BusinessRule
+
+ObjectProperty: madeUnderAuthority
+    Domain: Decision
+    Range: AuthorityAssignment
+
+DataProperty: decidedAt
+    Domain: Decision
+    Range: xsd:dateTime
+
+Class: SSIAccountMismatchDecision
+    SubClassOf:
+        SettlementExceptionDecision,
+        concernsSituation some SSIAccountMismatchSituation,
+        consideredUnderRule some SettlementSSIRule,
+        madeUnderAuthority some SettlementExceptionAuthorityAssignment
+
+# A Decision is a case-specific institutional determination.
+#
+# Decision
+#     !=
+# BusinessRule
+
+
+### Decision outcomes
+
+Class: DecisionOutcome
+
+Class: ApprovedOutcome
+    SubClassOf:
+        DecisionOutcome
+
+Class: RejectedOutcome
+    SubClassOf:
+        DecisionOutcome
+
+ObjectProperty: hasDecisionOutcome
+    Domain: Decision
+    Range: DecisionOutcome
+
+Class: ApprovedSettlementExceptionDecision
+    SubClassOf:
+        SettlementExceptionDecision,
+        hasDecisionOutcome some ApprovedOutcome
+
+# The outcome records what was decided.
+# It does not explain why the decision was made.
+
+
+### Decision rationale
+
+Class: DecisionRationale
+
+Class: ClientMigrationRationale
+    SubClassOf:
+        DecisionRationale
+
+ObjectProperty: hasRationale
+    Domain: Decision
+    Range: DecisionRationale
+
+ObjectProperty: rationaleDependsOnSituation
+    Domain: DecisionRationale
+    Range: Situation
+
+Class: MigrationBasedSettlementRationale
+    SubClassOf:
+        ClientMigrationRationale,
+        rationaleDependsOnSituation some ClientMigrationSituation
+
+Class: MigrationBasedSettlementDecision
+    SubClassOf:
+        ApprovedSettlementExceptionDecision,
+        hasRationale some MigrationBasedSettlementRationale
+
+# Same outcome
+#     !=
+# same rationale
+#
+# Two decisions may both be approved while depending on different
+# circumstances and reasoning.
+
+
+### Precedent use
+
+Class: PrecedentUse
+
+ObjectProperty: usesPreviousDecision
+    Domain: PrecedentUse
+    Range: Decision
+
+ObjectProperty: relevantToDecision
+    Domain: PrecedentUse
+    Range: Decision
+
+ObjectProperty: reliesOnRationale
+    Domain: PrecedentUse
+    Range: DecisionRationale
+
+# PrecedentUse models the later judgement that an earlier decision is
+# relevant to another decision.
+#
+# Previous Decision
+#     !=
+# PrecedentUse
+#
+# The ontology does not assume that every historical Decision is a
+# universal Precedent.
+
+
+### Settlement precedent use
+
+Class: SettlementDecisionPrecedentUse
+    SubClassOf:
+        PrecedentUse,
+        usesPreviousDecision some SettlementExceptionDecision,
+        relevantToDecision some SettlementExceptionDecision
+
+Class: MigrationRationalePrecedentUse
+    SubClassOf:
+        SettlementDecisionPrecedentUse,
+        reliesOnRationale some ClientMigrationRationale
+
+# The rationale matters because the earlier outcome may only be relevant
+# when the circumstances supporting that rationale also matter later.
+
+
+### Similarity versus relevance
+
+Class: CaseSimilarityAssessment
+
+Class: SimilarCaseAssessment
+    SubClassOf:
+        CaseSimilarityAssessment
+
+Class: CaseRelevanceAssessment
+
+Class: RelevantCaseAssessment
+    SubClassOf:
+        CaseRelevanceAssessment
+
+Class: IrrelevantCaseAssessment
+    SubClassOf:
+        CaseRelevanceAssessment
+
+ObjectProperty: comparesEarlierSituation
+    Domain: CaseSimilarityAssessment
+    Range: Situation
+
+ObjectProperty: comparesLaterSituation
+    Domain: CaseSimilarityAssessment
+    Range: Situation
+
+ObjectProperty: assessesPreviousDecision
+    Domain: CaseRelevanceAssessment
+    Range: Decision
+
+ObjectProperty: assessesLaterDecision
+    Domain: CaseRelevanceAssessment
+    Range: Decision
+
+DisjointClasses:
+    RelevantCaseAssessment,
+    IrrelevantCaseAssessment
+
+# Similarity helps retrieve a case.
+# Relevance asks whether the earlier reasoning matters to the later case.
+#
+# Case similarity
+#     !=
+# reasoning relevance
+
+
+### Decision context
+
+Class: DecisionContext
+
+ObjectProperty: hasDecisionContext
+    Domain: Decision
+    Range: DecisionContext
+
+ObjectProperty: contextIncludesSituation
+    Domain: DecisionContext
+    Range: Situation
+
+ObjectProperty: contextIncludesRule
+    Domain: DecisionContext
+    Range: BusinessRule
+
+ObjectProperty: contextIncludesAuthority
+    Domain: DecisionContext
+    Range: AuthorityAssignment
+
+# Decision context should preserve facts that materially shaped the
+# judgement or later interpretation, rather than attempting to capture
+# everything that happened to be true at the time.
+
+
+### Historical rule and authority context
+
+DataProperty: contextValidAt
+    Domain: DecisionContext
+    Range: xsd:dateTime
+
+# Rule validity and authority validity are modelled elsewhere in more
+# detail. Here the context records that historical interpretation depends
+# on the rule and authority arrangements relevant at decision time.
+
+
+### Precedent-use status
+
+Class: PrecedentUseStatus
+
+Class: ActivePrecedentUseStatus
+    SubClassOf:
+        PrecedentUseStatus
+
+Class: WithdrawnPrecedentUseStatus
+    SubClassOf:
+        PrecedentUseStatus
+
+ObjectProperty: hasPrecedentUseStatus
+    Domain: PrecedentUse
+    Range: PrecedentUseStatus
+
+DataProperty: precedentUseFrom
+    Domain: PrecedentUse
+    Range: xsd:dateTime
+
+DataProperty: precedentUseUntil
+    Domain: PrecedentUse
+    Range: xsd:dateTime
+
+DisjointClasses:
+    ActivePrecedentUseStatus,
+    WithdrawnPrecedentUseStatus
+
+# A previous case may stop being useful because the rule, operating
+# environment or rationale has changed.
+#
+# Historical decision remains true
+#     !=
+# precedent use remains relevant forever
+
+
+### Institutional review boundary
+
+Class: InstitutionalReview
+
+ObjectProperty: reviewsDecisionPattern
+    Domain: InstitutionalReview
+    Range: Decision
+
+ObjectProperty: mayMotivateRule
+    Domain: InstitutionalReview
+    Range: BusinessRule
+
+# Repeated decisions may motivate institutional review.
+#
+# They do not automatically create normative force or become a rule.
+
+
+### Decision correctness boundary
+
+Class: DecisionQualityAssessment
+
+Class: SoundDecisionAssessment
+    SubClassOf:
+        DecisionQualityAssessment
+
+Class: UnsoundDecisionAssessment
+    SubClassOf:
+        DecisionQualityAssessment
+
+ObjectProperty: assessesDecisionQuality
+    Domain: DecisionQualityAssessment
+    Range: Decision
+
+DisjointClasses:
+    SoundDecisionAssessment,
+    UnsoundDecisionAssessment
+
+# A properly authorised decision may still be poorly reasoned.
+#
+# Authorised
+#     !=
+# Correct
+
+
+### Focused category distinctions
+
+DisjointClasses:
+    Decision,
+    DecisionOutcome
+
+DisjointClasses:
+    Decision,
+    DecisionRationale
+
+DisjointClasses:
+    Decision,
+    PrecedentUse
+
+DisjointClasses:
+    BusinessRule,
+    Decision
+
+DisjointClasses:
+    BusinessRule,
+    PrecedentUse
+
+# These distinctions support the focused example without claiming that
+# every institution must use exactly the same decision-governance model.
+

@@ -1,0 +1,700 @@
+Prefix: : <https://finsight-tech.com/ontology/examples/layered-explanation#>
+Prefix: xsd: <http://www.w3.org/2001/XMLSchema#>
+
+Ontology: <https://finsight-tech.com/ontology/examples/layered-explanation>
+
+
+# ************************************************************************
+# Layered Explanation of a Failed Settlement
+# ************************************************************************
+#
+# Integrates business occurrence, rules, procedures, authority, decisions,
+# controls, assertions, evidence and provenance around a failed settlement.
+# It avoids reducing the investigation to one generic "root cause".
+#
+
+
+Datatype: xsd:dateTime
+Datatype: xsd:decimal
+
+### Settlement occurrence and condition
+
+Class: SettlementInstruction
+
+Class: StandingSettlementInstruction
+
+Class: SettlementAttempt
+
+Class: SettlementOutcome
+
+Class: FailedSettlementOutcome
+    SubClassOf:
+        SettlementOutcome
+
+Class: Settlement
+
+Class: SettlementCondition
+
+Class: OutstandingSettlementCondition
+    SubClassOf:
+        SettlementCondition
+
+Class: SettlementAccount
+
+ObjectProperty: usesSettlementAccount
+    Domain: SettlementInstruction
+    Range: SettlementAccount
+
+ObjectProperty: specifiesSettlementAccount
+    Domain: StandingSettlementInstruction
+    Range: SettlementAccount
+
+ObjectProperty: hasOutcome
+    Domain: SettlementAttempt
+    Range: SettlementOutcome
+
+ObjectProperty: hasSettlementCondition
+    Domain: Settlement
+    Range: SettlementCondition
+
+# Failed attempt outcome and continuing settlement condition are separate.
+#
+# FailedSettlementOutcome
+#     !=
+# OutstandingSettlementCondition
+
+
+### Settlement situation
+
+Class: SettlementSituation
+
+Class: SSIAccountMismatchSituation
+    SubClassOf:
+        SettlementSituation
+
+ObjectProperty: situationIncludesInstruction
+    Domain: SettlementSituation
+    Range: SettlementInstruction
+
+ObjectProperty: situationIncludesSSI
+    Domain: SettlementSituation
+    Range: StandingSettlementInstruction
+
+ObjectProperty: situationIncludesAttempt
+    Domain: SettlementSituation
+    Range: SettlementAttempt
+
+# The presence of an account mismatch does not by itself establish
+# that the mismatch caused the failed settlement attempt.
+
+
+### Business rule
+
+Class: BusinessRule
+
+Class: SettlementSSIRule
+    SubClassOf:
+        BusinessRule
+
+Class: RuleEvaluation
+
+ObjectProperty: evaluatesRule
+    Domain: RuleEvaluation
+    Range: BusinessRule
+
+ObjectProperty: evaluatesSituation
+    Domain: RuleEvaluation
+    Range: SettlementSituation
+
+Class: AuthorisedException
+
+ObjectProperty: considersAuthorisedException
+    Domain: RuleEvaluation
+    Range: AuthorisedException
+
+# Example rule meaning:
+#
+# Use the SSI applicable on the settlement date
+# unless an authorised exception exists.
+#
+# Observed mismatch
+#     !=
+# rule applicability
+#     !=
+# authorised exception
+#     !=
+# rule violation
+
+
+### Procedure specification and execution
+
+Class: ProcedureSpecification
+
+Class: SettlementMismatchProcedure
+    SubClassOf:
+        ProcedureSpecification
+
+Class: ProcedureExecution
+
+ObjectProperty: executionFollowsProcedure
+    Domain: ProcedureExecution
+    Range: ProcedureSpecification
+
+ObjectProperty: procedureExecutionConcerns
+    Domain: ProcedureExecution
+    Range: SettlementSituation
+
+Class: SettlementInvestigationExecution
+    SubClassOf:
+        ProcedureExecution,
+        executionFollowsProcedure some SettlementMismatchProcedure,
+        procedureExecutionConcerns some SSIAccountMismatchSituation
+
+# Procedure execution failure and procedure specification deficiency
+# are different explanations.
+
+
+### Procedure assessment
+
+Class: ProcedureAssessment
+
+Class: ProcedureExecutionAssessment
+    SubClassOf:
+        ProcedureAssessment
+
+Class: ProcedureSpecificationAssessment
+    SubClassOf:
+        ProcedureAssessment
+
+ObjectProperty: assessesProcedureExecution
+    Domain: ProcedureExecutionAssessment
+    Range: ProcedureExecution
+
+ObjectProperty: assessesProcedureSpecification
+    Domain: ProcedureSpecificationAssessment
+    Range: ProcedureSpecification
+
+Class: InadequateProcedureExecutionAssessment
+    SubClassOf:
+        ProcedureExecutionAssessment
+
+Class: InadequateProcedureSpecificationAssessment
+    SubClassOf:
+        ProcedureSpecificationAssessment
+
+# Procedure not followed
+#     !=
+# procedure followed but inadequate
+
+
+### Heuristic and previous decision
+
+Class: Heuristic
+
+Class: RecentSSIChangeHeuristic
+    SubClassOf:
+        Heuristic
+
+Class: Decision
+
+Class: DecisionRationale
+
+Class: PrecedentUse
+
+ObjectProperty: hasRationale
+    Domain: Decision
+    Range: DecisionRationale
+
+ObjectProperty: usesPreviousDecision
+    Domain: PrecedentUse
+    Range: Decision
+
+ObjectProperty: relevantToDecision
+    Domain: PrecedentUse
+    Range: Decision
+
+ObjectProperty: influencedByHeuristic
+    Domain: Decision
+    Range: Heuristic
+
+ObjectProperty: influencedByPrecedentUse
+    Domain: Decision
+    Range: PrecedentUse
+
+# Heuristic or previous-decision influence may help explain why a decision
+# seemed reasonable without establishing that the action was permitted.
+#
+# Reasonable judgement
+#     !=
+# authorised judgement
+
+
+### Authority assignment
+
+Class: AuthorityAssignment
+
+Class: SettlementExceptionAuthorityAssignment
+    SubClassOf:
+        AuthorityAssignment
+
+Class: DecisionType
+
+Class: SettlementExceptionDecisionType
+    SubClassOf:
+        DecisionType
+
+ObjectProperty: authorises
+    Domain: AuthorityAssignment
+    Range: DecisionType
+
+ObjectProperty: hasDecisionType
+    Domain: Decision
+    Range: DecisionType
+
+ObjectProperty: madeUnderAuthority
+    Domain: Decision
+    Range: AuthorityAssignment
+
+Class: SettlementExceptionDecision
+    SubClassOf:
+        Decision,
+        hasDecisionType some SettlementExceptionDecisionType
+
+# Decision occurrence does not prove sufficient authority.
+#
+# Decision
+#     !=
+# AuthorityAssignment
+
+
+### Authority sufficiency
+
+Class: AuthoritySufficiencyAssessment
+
+Class: SufficientAuthorityAssessment
+    SubClassOf:
+        AuthoritySufficiencyAssessment
+
+Class: InsufficientAuthorityAssessment
+    SubClassOf:
+        AuthoritySufficiencyAssessment
+
+ObjectProperty: assessesAuthority
+    Domain: AuthoritySufficiencyAssessment
+    Range: AuthorityAssignment
+
+ObjectProperty: assessesDecision
+    Domain: AuthoritySufficiencyAssessment
+    Range: Decision
+
+DisjointClasses:
+    SufficientAuthorityAssessment,
+    InsufficientAuthorityAssessment
+
+# Insufficient authority is a governance explanation.
+# It does not automatically explain why the external settlement failed.
+
+
+### Control definition
+
+Class: ControlDefinition
+
+Class: SSIAccountComparisonControl
+    SubClassOf:
+        ControlDefinition
+
+ObjectProperty: supportsAssessmentOf
+    Domain: ControlDefinition
+    Range: BusinessRule
+
+Class: SettlementSSIAccountControl
+    SubClassOf:
+        SSIAccountComparisonControl,
+        supportsAssessmentOf some SettlementSSIRule
+
+
+### Control execution and result
+
+Class: ControlExecution
+
+Class: ControlResult
+
+Class: PassControlResult
+    SubClassOf:
+        ControlResult
+
+Class: FailControlResult
+    SubClassOf:
+        ControlResult
+
+DisjointClasses:
+    PassControlResult,
+    FailControlResult
+
+ObjectProperty: executionOf
+    Domain: ControlExecution
+    Range: ControlDefinition
+
+ObjectProperty: controlAssesses
+    Domain: ControlExecution
+    Range: SettlementSituation
+
+ObjectProperty: producesControlResult
+    Domain: ControlExecution
+    Range: ControlResult
+
+Class: SSIAccountComparisonExecution
+    SubClassOf:
+        ControlExecution,
+        executionOf some SettlementSSIAccountControl,
+        controlAssesses some SSIAccountMismatchSituation
+
+# ControlDefinition
+#     !=
+# ControlExecution
+#     !=
+# ControlResult
+
+
+### Control input and provenance
+
+Class: InformationArtifact
+
+Class: SSIRecord
+    SubClassOf:
+        InformationArtifact
+
+Class: SettlementInstructionRecord
+    SubClassOf:
+        InformationArtifact
+
+Class: ControlInputRecord
+    SubClassOf:
+        InformationArtifact
+
+Class: ControlExecutionRecord
+    SubClassOf:
+        InformationArtifact
+
+Class: ReferenceDataHistory
+    SubClassOf:
+        InformationArtifact
+
+ObjectProperty: usesInputArtifact
+    Domain: ControlExecution
+    Range: InformationArtifact
+
+ObjectProperty: recordsControlExecution
+    Domain: ControlExecutionRecord
+    Range: ControlExecution
+
+# A control may execute successfully while using information that does not
+# represent the relevant business state.
+
+
+### Information source and provenance
+
+Class: InformationSource
+
+Class: ReferenceDataSystem
+    SubClassOf:
+        InformationSource
+
+Class: SettlementInstructionSystem
+    SubClassOf:
+        InformationSource
+
+ObjectProperty: sourcedFrom
+    Domain: InformationArtifact
+    Range: InformationSource
+
+ObjectProperty: derivedFrom
+    Domain: InformationArtifact
+    Range: InformationArtifact
+
+ObjectProperty: artifactProducedBy
+    Domain: InformationArtifact
+
+DataProperty: recordedAt
+    Domain: InformationArtifact
+    Range: xsd:dateTime
+
+# Provenance explains where supporting information came from and
+# how it was produced.
+
+
+### Assertions
+
+Class: Assertion
+
+Class: SettlementInstructionAccountAssertion
+    SubClassOf:
+        Assertion
+
+Class: ApplicableSSIAccountAssertion
+    SubClassOf:
+        Assertion
+
+Class: SettlementAttemptFailureAssertion
+    SubClassOf:
+        Assertion
+
+Class: ControlUsedStaleSSIAssertion
+    SubClassOf:
+        Assertion
+
+Class: AuthorityExceededAssertion
+    SubClassOf:
+        Assertion
+
+Class: ProcedureDeficiencyAssertion
+    SubClassOf:
+        Assertion
+
+ObjectProperty: supportsAssertion
+    Range: Assertion
+
+# Evidence is represented contextually through information artefacts
+# supporting assertions rather than through a universal Evidence class.
+
+
+### Focused evidence artefacts
+
+Class: InstructionAccountEvidence
+    SubClassOf:
+        SettlementInstructionRecord,
+        supportsAssertion some SettlementInstructionAccountAssertion
+
+Class: SSIAccountEvidence
+    SubClassOf:
+        SSIRecord,
+        supportsAssertion some ApplicableSSIAccountAssertion
+
+Class: ControlInputEvidence
+    SubClassOf:
+        ControlInputRecord,
+        supportsAssertion some ControlUsedStaleSSIAssertion
+
+Class: AuthorityEvidenceArtifact
+    SubClassOf:
+        InformationArtifact,
+        supportsAssertion some AuthorityExceededAssertion
+
+Class: ProcedureEvidenceArtifact
+    SubClassOf:
+        InformationArtifact,
+        supportsAssertion some ProcedureDeficiencyAssertion
+
+# InformationArtifact
+#     may serve as evidence through
+# supportsAssertion
+
+
+### Explanation
+
+Class: Explanation
+
+Class: OperationalExplanation
+    SubClassOf:
+        Explanation
+
+Class: ProcessExplanation
+    SubClassOf:
+        Explanation
+
+Class: ControlExplanation
+    SubClassOf:
+        Explanation
+
+Class: DecisionExplanation
+    SubClassOf:
+        Explanation
+
+Class: GovernanceExplanation
+    SubClassOf:
+        Explanation
+
+# These explanation types answer different "why" questions.
+# They are not treated as subclasses of one generic Cause.
+
+
+### Explanation relationships
+
+ObjectProperty: explainsSituation
+    Domain: Explanation
+    Range: SettlementSituation
+
+ObjectProperty: usesAssertion
+    Domain: Explanation
+    Range: Assertion
+
+Class: SettlementOperationalExplanation
+    SubClassOf:
+        OperationalExplanation,
+        explainsSituation some SSIAccountMismatchSituation
+
+Class: SettlementControlExplanation
+    SubClassOf:
+        ControlExplanation,
+        explainsSituation some SSIAccountMismatchSituation,
+        usesAssertion some ControlUsedStaleSSIAssertion
+
+Class: SettlementGovernanceExplanation
+    SubClassOf:
+        GovernanceExplanation,
+        explainsSituation some SSIAccountMismatchSituation,
+        usesAssertion some AuthorityExceededAssertion
+
+Class: SettlementProcessExplanation
+    SubClassOf:
+        ProcessExplanation,
+        explainsSituation some SSIAccountMismatchSituation,
+        usesAssertion some ProcedureDeficiencyAssertion
+
+# Operational, process, control and governance explanations may all be
+# relevant to one incident without competing for one "root cause" slot.
+
+
+### Causal contribution boundary
+
+Class: CausalContributionAssertion
+    SubClassOf:
+        Assertion
+
+ObjectProperty: causalContributionTo
+    Domain: CausalContributionAssertion
+    Range: SettlementAttempt
+
+# Causality is represented as an explicit assertion that requires support.
+#
+# Temporal sequence
+#     !=
+# causality
+#
+# The ontology does not infer causal relationships merely because one
+# event or condition occurred before another.
+
+
+### Root-cause reporting category
+
+Class: RootCauseCategory
+
+Class: StaticDataRootCauseCategory
+    SubClassOf:
+        RootCauseCategory
+
+Class: HumanErrorRootCauseCategory
+    SubClassOf:
+        RootCauseCategory
+
+Class: SystemFailureRootCauseCategory
+    SubClassOf:
+        RootCauseCategory
+
+Class: ProcessFailureRootCauseCategory
+    SubClassOf:
+        RootCauseCategory
+
+ObjectProperty: classifiedUnderRootCause
+    Domain: SettlementSituation
+    Range: RootCauseCategory
+
+# A root-cause category may be useful for operational reporting.
+#
+# Recorded root-cause category
+#     !=
+# complete explanation
+
+
+### Remediation and preventive improvement
+
+Class: Action
+
+Class: ImmediateRemediation
+    SubClassOf:
+        Action
+
+Class: PreventiveImprovement
+    SubClassOf:
+        Action
+
+Class: CorrectSettlementInstruction
+    SubClassOf:
+        ImmediateRemediation
+
+Class: ImproveSSIControlInput
+    SubClassOf:
+        PreventiveImprovement
+
+Class: ReviewExceptionAuthority
+    SubClassOf:
+        PreventiveImprovement
+
+Class: ImproveSettlementProcedure
+    SubClassOf:
+        PreventiveImprovement
+
+DisjointClasses:
+    ImmediateRemediation,
+    PreventiveImprovement
+
+# Immediate remediation repairs the current incident.
+# Preventive improvement aims to reduce recurrence.
+
+
+### Investigation conclusion
+
+Class: InvestigationConclusion
+
+ObjectProperty: conclusionAbout
+    Domain: InvestigationConclusion
+    Range: SettlementSituation
+
+ObjectProperty: conclusionUsesExplanation
+    Domain: InvestigationConclusion
+    Range: Explanation
+
+ObjectProperty: conclusionSupportedByAssertion
+    Domain: InvestigationConclusion
+    Range: Assertion
+
+Class: FailedSettlementInvestigationConclusion
+    SubClassOf:
+        InvestigationConclusion,
+        conclusionAbout some SSIAccountMismatchSituation,
+        conclusionUsesExplanation some OperationalExplanation,
+        conclusionUsesExplanation some ControlExplanation,
+        conclusionUsesExplanation some GovernanceExplanation
+
+# An investigation conclusion can combine several explanation layers
+# rather than selecting one semantically privileged "root cause".
+
+
+### Focused category distinctions
+
+DisjointClasses:
+    ControlDefinition,
+    ControlExecution
+
+DisjointClasses:
+    ControlExecution,
+    ControlResult
+
+DisjointClasses:
+    Decision,
+    AuthorityAssignment
+
+DisjointClasses:
+    Assertion,
+    InformationArtifact
+
+DisjointClasses:
+    Explanation,
+    Assertion
+
+DisjointClasses:
+    RootCauseCategory,
+    Explanation
+
+# These are focused commitments for this integration example.
+

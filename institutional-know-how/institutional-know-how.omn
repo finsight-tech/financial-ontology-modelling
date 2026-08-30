@@ -1,0 +1,405 @@
+Prefix: : <https://finsight-tech.com/ontology/examples/institutional-know-how#>
+Prefix: xsd: <http://www.w3.org/2001/XMLSchema#>
+
+Ontology: <https://finsight-tech.com/ontology/examples/institutional-know-how>
+
+
+# ************************************************************************
+# Institutional Know-How
+# ************************************************************************
+#
+# Models several kinds of institutional meaning used in a settlement
+# investigation. It deliberately avoids a universal OrganisationalKnowHow
+# superclass and instead connects distinct concepts through typed relations.
+#
+
+Datatype: xsd:dateTime
+Datatype: xsd:decimal
+
+### Financial and operational context
+
+Class: SettlementInstruction
+
+Class: StandingSettlementInstruction
+
+Class: SettlementException
+
+Class: SettlementAccount
+
+Class: OrganisationalRole
+
+Class: OperationsManagerRole
+    SubClassOf:
+        OrganisationalRole
+
+
+### Institutional knowledge content
+
+Class: BusinessRule
+
+Class: Policy
+
+Class: ProcedureSpecification
+
+Class: Guidance
+
+Class: Heuristic
+
+Class: Objective
+
+Class: DecisionRationale
+
+# These classes represent different kinds of institutional content.
+# They are not declared disjoint here because real institutional material
+# may combine or evolve between these forms.
+
+
+### Applicability
+
+ObjectProperty: appliesTo
+    Domain: BusinessRule
+
+ObjectProperty: procedureAppliesTo
+    Domain: ProcedureSpecification
+
+ObjectProperty: guidanceAppliesTo
+    Domain: Guidance
+
+ObjectProperty: heuristicAppliesTo
+    Domain: Heuristic
+
+DataProperty: effectiveFrom
+    Range: xsd:dateTime
+
+DataProperty: effectiveUntil
+    Range: xsd:dateTime
+
+# Applicability and effective period are part of using institutional
+# knowledge correctly. A rule that exists is not necessarily applicable
+# to every case or every point in time.
+
+
+### Policy, objective and rule relationships
+
+ObjectProperty: supportsObjective
+    Domain: Policy
+    Range: Objective
+
+ObjectProperty: governedByPolicy
+    Domain: BusinessRule
+    Range: Policy
+
+ObjectProperty: implementsRule
+    Domain: ProcedureSpecification
+    Range: BusinessRule
+
+# Objective, policy, rule and procedure describe different semantic roles:
+#
+# Objective
+#     desired outcome
+#
+# Policy
+#     governing direction
+#
+# BusinessRule
+#     normative constraint, permission or obligation
+#
+# ProcedureSpecification
+#     prescribed or recommended way of carrying out work
+
+
+### Settlement rule
+
+Class: SettlementInstructionRule
+    SubClassOf:
+        BusinessRule,
+        appliesTo some SettlementInstruction
+
+# Example business meaning:
+#
+# Use the SSI applicable on the settlement date unless an authorised
+# exception exists.
+#
+# The ontology models the rule as semantic content rather than encoding
+# the full rule logic directly in OWL.
+
+
+### Procedure and practical guidance
+
+Class: SettlementMismatchProcedure
+    SubClassOf:
+        ProcedureSpecification,
+        procedureAppliesTo some SettlementInstruction
+
+Class: SettlementInvestigationHeuristic
+    SubClassOf:
+        Heuristic,
+        heuristicAppliesTo some SettlementInstruction
+
+# Example heuristic:
+#
+# If the settlement account changed recently, check static-data history
+# first.
+#
+# This is intentionally not modelled as a BusinessRule.
+
+
+### Authority
+
+Class: AuthorityAssignment
+
+Class: DecisionType
+
+Class: SSIOverrideDecisionType
+    SubClassOf:
+        DecisionType
+
+ObjectProperty: grantsAuthorityTo
+    Domain: AuthorityAssignment
+    Range: OrganisationalRole
+
+ObjectProperty: authorityFor
+    Domain: AuthorityAssignment
+    Range: DecisionType
+
+Class: SSIOverrideAuthorityAssignment
+    SubClassOf:
+        AuthorityAssignment,
+        grantsAuthorityTo some OperationsManagerRole,
+        authorityFor some SSIOverrideDecisionType
+
+# AuthorityAssignment is not treated as a kind of knowledge content.
+# It represents an institutional authority arrangement that may itself
+# be described by policies, matrices or other information artefacts.
+
+
+### Decisions
+
+Class: Decision
+
+Class: ApprovalDecision
+    SubClassOf:
+        Decision
+
+Class: DecisionOutcome
+
+Class: ApprovedOutcome
+    SubClassOf:
+        DecisionOutcome
+
+Class: RejectedOutcome
+    SubClassOf:
+        DecisionOutcome
+
+ObjectProperty: decisionAbout
+    Domain: Decision
+
+ObjectProperty: madeByRole
+    Domain: Decision
+    Range: OrganisationalRole
+
+ObjectProperty: hasDecisionOutcome
+    Domain: Decision
+    Range: DecisionOutcome
+
+ObjectProperty: hasRationale
+    Domain: Decision
+    Range: DecisionRationale
+
+Class: SSIOverrideDecision
+    SubClassOf:
+        ApprovalDecision,
+        decisionAbout some SettlementException,
+        madeByRole some OperationsManagerRole,
+        hasDecisionOutcome some DecisionOutcome
+
+# A Decision is something decided in a particular situation.
+# It is not the same thing as a rule governing future situations.
+
+
+### Previous decision and precedent
+
+Class: PrecedentUse
+
+ObjectProperty: usesPreviousDecision
+    Domain: PrecedentUse
+    Range: Decision
+
+ObjectProperty: relevantToDecision
+    Domain: PrecedentUse
+    Range: Decision
+
+# A previous Decision does not automatically become precedent.
+#
+# PrecedentUse represents the contextual use of an earlier decision when
+# considering another decision.
+#
+# Decision
+#     !=
+# precedent use of Decision
+
+
+### Controls
+
+Class: ControlDefinition
+
+Class: ControlExecution
+
+Class: ControlResult
+
+ObjectProperty: executesControl
+    Domain: ControlExecution
+    Range: ControlDefinition
+
+ObjectProperty: producesControlResult
+    Domain: ControlExecution
+    Range: ControlResult
+
+ObjectProperty: controlAppliesTo
+    Domain: ControlExecution
+
+Class: SSIComparisonControl
+    SubClassOf:
+        ControlDefinition
+
+Class: SSIComparisonExecution
+    SubClassOf:
+        ControlExecution,
+        executesControl some SSIComparisonControl,
+        controlAppliesTo some SettlementInstruction,
+        producesControlResult some ControlResult
+
+# The control definition, its execution and its result are different:
+#
+# ControlDefinition
+#     what should be checked
+#
+# ControlExecution
+#     the actual check performed
+#
+# ControlResult
+#     what the check found
+
+
+### Information artefacts and records
+
+Class: InformationArtifact
+
+Class: Document
+    SubClassOf:
+        InformationArtifact
+
+Class: DecisionRecord
+    SubClassOf:
+        InformationArtifact
+
+Class: ControlRecord
+    SubClassOf:
+        InformationArtifact
+
+Class: SettlementProcedureManual
+    SubClassOf:
+        Document
+
+ObjectProperty: expresses
+    Domain: InformationArtifact
+
+ObjectProperty: recordsDecision
+    Domain: DecisionRecord
+    Range: Decision
+
+ObjectProperty: recordsControlExecution
+    Domain: ControlRecord
+    Range: ControlExecution
+
+ObjectProperty: recordsControlResult
+    Domain: ControlRecord
+    Range: ControlResult
+
+# Document
+#     !=
+# knowledge expressed by Document
+#
+# Decision
+#     !=
+# DecisionRecord
+#
+# ControlExecution
+#     !=
+# ControlRecord
+
+
+### Business rule expression and implementation
+
+Class: RuleExpression
+
+Class: NaturalLanguageRuleExpression
+    SubClassOf:
+        RuleExpression
+
+Class: DecisionTableExpression
+    SubClassOf:
+        RuleExpression
+
+Class: RuleImplementation
+
+Class: ExecutableRuleImplementation
+    SubClassOf:
+        RuleImplementation
+
+ObjectProperty: expressedBy
+    Domain: BusinessRule
+    Range: RuleExpression
+
+ObjectProperty: implementedBy
+    Domain: BusinessRule
+    Range: RuleImplementation
+
+# One BusinessRule may have several expressions and implementations.
+#
+# BusinessRule
+#     !=
+# RuleExpression
+#     !=
+# RuleImplementation
+#
+# This allows the same institutional rule to be represented in natural
+# language, a decision table and executable logic without creating three
+# different business rules.
+
+
+### Evidence relationship
+
+ObjectProperty: supports
+    Domain: InformationArtifact
+
+# Evidence is treated here through the contextual supports relationship
+# rather than by declaring every supporting record intrinsically Evidence.
+#
+# An InformationArtifact may support a claim, decision or control result
+# in a particular context.
+
+
+### Focused category distinctions
+
+DisjointClasses:
+    Decision,
+    InformationArtifact
+
+DisjointClasses:
+    ControlDefinition,
+    ControlExecution,
+    ControlResult
+
+DisjointClasses:
+    BusinessRule,
+    Decision
+
+DisjointClasses:
+    BusinessRule,
+    AuthorityAssignment
+
+# These disjointness axioms capture focused distinctions used by the
+# example. They do not attempt to define a complete upper ontology.
+
+

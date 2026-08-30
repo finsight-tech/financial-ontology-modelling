@@ -1,0 +1,85 @@
+Prefix: : <https://finsight-tech.com/ontology/examples/identity-persistence/amendment#>
+
+Ontology: <https://finsight-tech.com/ontology/examples/identity-persistence/amendment>
+
+
+# ************************************************************************
+# Amendment - Identity-Preserving Change
+# ************************************************************************
+#
+# Models an amendment as an event that changes financial meaning associated
+# with an existing Trade. Record versions and snapshots remain representations
+# of the Trade rather than becoming new Trade identities.
+#
+
+
+### Core financial concepts
+
+Class: Trade
+
+Class: TradeTerms
+
+Class: BusinessEvent
+
+Class: AmendmentEvent
+    SubClassOf: BusinessEvent
+
+
+### Amendment relationships
+
+ObjectProperty: amends
+    Domain: AmendmentEvent
+    Range: Trade
+
+ObjectProperty: establishesTerms
+    Domain: AmendmentEvent
+    Range: TradeTerms
+
+ObjectProperty: termsOf
+    Domain: TradeTerms
+    Range: Trade
+
+
+### Focused amendment semantics
+
+Class: TradeAmendment
+    SubClassOf:
+        AmendmentEvent,
+        amends exactly 1 Trade,
+        establishesTerms some TradeTerms
+
+
+### Representations of the continuing Trade
+
+Class: TradeRepresentation
+
+Class: TradeVersion
+    SubClassOf: TradeRepresentation
+
+Class: TradeSnapshot
+    SubClassOf: TradeRepresentation
+
+ObjectProperty: represents
+    Domain: TradeRepresentation
+    Range: Trade
+
+Class: TradeVersion
+    SubClassOf:
+        represents exactly 1 Trade
+
+Class: TradeSnapshot
+    SubClassOf:
+        represents exactly 1 Trade
+
+
+### Modelling boundaries
+
+# The ontology does not introduce an "AmendedTrade" as a new financial
+# identity merely because terms changed.
+#
+# TradeVersion and TradeSnapshot are representation concepts. Multiple
+# versions or snapshots may represent one continuing Trade.
+#
+# This file demonstrates a model that is compatible with identity
+# persistence. OWL alone does not decide that every real-world amendment
+# preserves Trade identity; that judgement comes from business semantics.

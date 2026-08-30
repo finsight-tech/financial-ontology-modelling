@@ -1,0 +1,455 @@
+Prefix: : <https://finsight-tech.com/ontology/examples/control-evidence-provenance#>
+Prefix: xsd: <http://www.w3.org/2001/XMLSchema#>
+
+Ontology: <https://finsight-tech.com/ontology/examples/control-evidence-provenance>
+
+
+# ************************************************************************
+# Control, Evidence and Provenance
+# ************************************************************************
+#
+# Models a settlement control separately from the business rule it supports,
+# the execution of the control, the result produced, assertions about the
+# case, and the information used to support those assertions.
+#
+
+
+Datatype: xsd:dateTime
+Datatype: xsd:decimal
+
+
+### Settlement domain
+
+Class: SettlementInstruction
+
+Class: StandingSettlementInstruction
+
+Class: SettlementSituation
+
+Class: SettlementAccountMismatchSituation
+    SubClassOf:
+        SettlementSituation
+
+Class: SettlementAccount
+
+ObjectProperty: usesSettlementAccount
+    Domain: SettlementInstruction
+    Range: SettlementAccount
+
+ObjectProperty: specifiesSettlementAccount
+    Domain: StandingSettlementInstruction
+    Range: SettlementAccount
+
+
+### Business rule
+
+Class: BusinessRule
+
+Class: SettlementSSIRule
+    SubClassOf:
+        BusinessRule
+
+# Example meaning:
+#
+# Use the SSI applicable on the settlement date
+# unless an authorised exception exists.
+
+
+### Rule assessment boundary
+
+Class: RuleEvaluation
+
+Class: SettlementSSIRuleEvaluation
+    SubClassOf:
+        RuleEvaluation
+
+ObjectProperty: evaluatesRule
+    Domain: RuleEvaluation
+    Range: BusinessRule
+
+ObjectProperty: evaluatesSituation
+    Domain: RuleEvaluation
+    Range: SettlementSituation
+
+Class: SettlementRuleEvaluation
+    SubClassOf:
+        SettlementSSIRuleEvaluation,
+        evaluatesRule some SettlementSSIRule,
+        evaluatesSituation some SettlementSituation
+
+# RuleEvaluation is kept separate from ControlExecution.
+# A control may support only one part of the complete rule evaluation.
+
+
+### Control definition
+
+Class: ControlDefinition
+
+Class: SettlementAccountComparisonControl
+    SubClassOf:
+        ControlDefinition
+
+ObjectProperty: supportsAssessmentOf
+    Domain: ControlDefinition
+    Range: BusinessRule
+
+Class: SSIAccountComparisonControl
+    SubClassOf:
+        SettlementAccountComparisonControl,
+        supportsAssessmentOf some SettlementSSIRule
+
+# A ControlDefinition specifies what the institution intends to check.
+#
+# BusinessRule
+#     !=
+# ControlDefinition
+#
+# A control may support assessment of a rule without completely
+# determining whether that rule is satisfied.
+
+
+### Control execution
+
+Class: ControlExecution
+
+Class: SettlementControlExecution
+    SubClassOf:
+        ControlExecution
+
+ObjectProperty: executionOf
+    Domain: ControlExecution
+    Range: ControlDefinition
+
+ObjectProperty: assesses
+    Domain: ControlExecution
+
+DataProperty: executedAt
+    Domain: ControlExecution
+    Range: xsd:dateTime
+
+Class: SSIAccountComparisonExecution
+    SubClassOf:
+        SettlementControlExecution,
+        executionOf some SSIAccountComparisonControl,
+        assesses some SettlementInstruction
+
+# The existence of a ControlDefinition does not imply that it was
+# executed for a particular settlement.
+#
+# ControlDefinition
+#     !=
+# ControlExecution
+
+
+### Control result
+
+Class: ControlResult
+
+Class: AccountComparisonResult
+    SubClassOf:
+        ControlResult
+
+Class: AccountMatchResult
+    SubClassOf:
+        AccountComparisonResult
+
+Class: AccountMismatchResult
+    SubClassOf:
+        AccountComparisonResult
+
+DisjointClasses:
+    AccountMatchResult,
+    AccountMismatchResult
+
+ObjectProperty: producesControlResult
+    Domain: ControlExecution
+    Range: ControlResult
+
+ObjectProperty: resultProducedBy
+    Domain: ControlResult
+    Range: ControlExecution
+
+Class: CompletedSSIAccountComparison
+    SubClassOf:
+        SSIAccountComparisonExecution,
+        producesControlResult some AccountComparisonResult
+
+# A ControlResult records what a particular control execution concluded.
+#
+# ControlResult
+#     !=
+# SettlementSituation
+#
+# A result is therefore not automatically the underlying business fact.
+
+
+### Historical control results
+
+Class: SupersededControlResult
+    SubClassOf:
+        ControlResult
+
+ObjectProperty: supersedesControlResult
+    Domain: ControlResult
+    Range: ControlResult
+
+# A later execution may produce a different result after data is corrected.
+#
+# The later result does not erase the historical fact that the earlier
+# execution produced its original result.
+
+
+### Assertions
+
+Class: Assertion
+
+Class: SettlementInstructionAccountAssertion
+    SubClassOf:
+        Assertion
+
+Class: ApplicableSSIAccountAssertion
+    SubClassOf:
+        Assertion
+
+Class: AccountMismatchAssertion
+    SubClassOf:
+        Assertion
+
+Class: ControlExecutionAssertion
+    SubClassOf:
+        Assertion
+
+# Assertions represent claims made about the settlement or control process.
+#
+# Assertion
+#     !=
+# InformationArtifact
+
+
+### Information artefacts
+
+Class: InformationArtifact
+
+Class: SettlementInstructionRecord
+    SubClassOf:
+        InformationArtifact
+
+Class: SSIRecord
+    SubClassOf:
+        InformationArtifact
+
+Class: ControlExecutionRecord
+    SubClassOf:
+        InformationArtifact
+
+Class: ControlResultRecord
+    SubClassOf:
+        InformationArtifact
+
+# A record or message is not inherently "evidence" in every context.
+# It functions evidentially when it supports a particular assertion.
+
+
+### Evidence relationships
+
+ObjectProperty: supportsAssertion
+    Range: Assertion
+
+ObjectProperty: recordsControlExecution
+    Domain: ControlExecutionRecord
+    Range: ControlExecution
+
+ObjectProperty: recordsControlResult
+    Domain: ControlResultRecord
+    Range: ControlResult
+
+Class: SettlementInstructionEvidenceArtifact
+    SubClassOf:
+        SettlementInstructionRecord,
+        supportsAssertion some SettlementInstructionAccountAssertion
+
+Class: SSIEvidenceArtifact
+    SubClassOf:
+        SSIRecord,
+        supportsAssertion some ApplicableSSIAccountAssertion
+
+Class: ControlExecutionEvidenceArtifact
+    SubClassOf:
+        ControlExecutionRecord,
+        supportsAssertion some ControlExecutionAssertion
+
+# Evidence is represented contextually through supportsAssertion.
+#
+# The ontology therefore does not require a universal Evidence superclass.
+
+
+### Control result supporting an assertion
+
+Class: EvidentialControlResult
+    SubClassOf:
+        ControlResult,
+        supportsAssertion some Assertion
+
+Class: MismatchSupportingResult
+    SubClassOf:
+        AccountMismatchResult,
+        supportsAssertion some AccountMismatchAssertion
+
+# A ControlResult may itself support a broader assertion.
+#
+# This does not make the ControlResult identical to that assertion.
+
+
+### Provenance sources
+
+Class: InformationSource
+
+Class: SystemSource
+    SubClassOf:
+        InformationSource
+
+Class: ReferenceDataSystem
+    SubClassOf:
+        SystemSource
+
+Class: SettlementInstructionSystem
+    SubClassOf:
+        SystemSource
+
+
+### Provenance relationships
+
+ObjectProperty: sourcedFrom
+    Domain: InformationArtifact
+    Range: InformationSource
+
+ObjectProperty: derivedFrom
+    Domain: InformationArtifact
+    Range: InformationArtifact
+
+ObjectProperty: artifactProducedBy
+    Domain: InformationArtifact
+
+DataProperty: recordedAt
+    Domain: InformationArtifact
+    Range: xsd:dateTime
+
+# Provenance describes origin, derivation and production.
+#
+# Evidence
+#     !=
+# Provenance
+#
+# An artefact can support an assertion while provenance explains
+# where that artefact came from.
+
+
+### Focused provenance examples
+
+Class: AuthoritativeSSIRecord
+    SubClassOf:
+        SSIRecord,
+        sourcedFrom some ReferenceDataSystem
+
+Class: OriginalSettlementInstructionRecord
+    SubClassOf:
+        SettlementInstructionRecord,
+        sourcedFrom some SettlementInstructionSystem
+
+Class: GeneratedControlResultRecord
+    SubClassOf:
+        ControlResultRecord,
+        artifactProducedBy some ControlExecution
+
+
+### Control execution and rule evaluation
+
+ObjectProperty: supportsRuleEvaluation
+    Domain: ControlExecution
+    Range: RuleEvaluation
+
+Class: RuleAssessmentSupportingControlExecution
+    SubClassOf:
+        ControlExecution,
+        supportsRuleEvaluation some RuleEvaluation
+
+# RuleEvaluation
+#     !=
+# ControlExecution
+#
+# For example, the account-comparison control can establish that two
+# account values differ while the complete rule evaluation may still
+# need to consider an authorised exception.
+
+
+### Control interpretation boundary
+
+Class: ControlInterpretation
+
+ObjectProperty: interpretsControlResult
+    Domain: ControlInterpretation
+    Range: ControlResult
+
+ObjectProperty: interpretationAboutSituation
+    Domain: ControlInterpretation
+    Range: SettlementSituation
+
+# PASS or FAIL is interpreted according to what the control tested,
+# which inputs were available and what the result is capable of supporting.
+#
+# PASS
+#     !=
+# complete business correctness
+#
+# FAIL
+#     !=
+# business-rule violation
+
+
+### Authorised exception boundary
+
+Class: AuthorisedException
+
+ObjectProperty: considersAuthorisedException
+    Domain: RuleEvaluation
+    Range: AuthorisedException
+
+Class: ExceptionAwareSettlementRuleEvaluation
+    SubClassOf:
+        SettlementRuleEvaluation,
+        considersAuthorisedException some AuthorisedException
+
+# A control may detect an SSI account mismatch while the full rule
+# evaluation concludes that the action is permitted because an
+# authorised exception exists.
+
+
+### Focused category distinctions
+
+DisjointClasses:
+    BusinessRule,
+    ControlDefinition
+
+DisjointClasses:
+    ControlDefinition,
+    ControlExecution
+
+DisjointClasses:
+    ControlExecution,
+    ControlResult
+
+DisjointClasses:
+    ControlResult,
+    SettlementSituation
+
+DisjointClasses:
+    Assertion,
+    InformationArtifact
+
+DisjointClasses:
+    RuleEvaluation,
+    ControlExecution
+
+# These are focused commitments for this example rather than claims
+# about every possible institutional controls ontology.
+

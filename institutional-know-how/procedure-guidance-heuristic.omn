@@ -1,0 +1,391 @@
+Prefix: : <https://finsight-tech.com/ontology/examples/procedure-guidance-heuristic#>
+Prefix: xsd: <http://www.w3.org/2001/XMLSchema#>
+
+Ontology: <https://finsight-tech.com/ontology/examples/procedure-guidance-heuristic>
+
+
+# ************************************************************************
+# Procedure, Guidance and Heuristic
+# ************************************************************************
+#
+# Models practical institutional know-how used during a settlement
+# investigation. It separates business rules, procedure specifications,
+# guidance, heuristics and empirical patterns.
+#
+# It deliberately does NOT introduce OrganisationalKnowHow as a superclass.
+#
+
+
+### Financial and operational context
+
+Class: SettlementInstruction
+
+Class: StandingSettlementInstruction
+
+Class: SettlementInvestigation
+
+Class: SituationType
+
+Class: SSIAccountMismatch
+    SubClassOf:
+        SituationType
+
+Class: ActionType
+
+Class: IdentifyApplicableSSI
+    SubClassOf:
+        ActionType
+
+Class: CompareSettlementAccount
+    SubClassOf:
+        ActionType
+
+Class: ReviewSSIChangeHistory
+    SubClassOf:
+        ActionType
+
+Class: CheckApprovedException
+    SubClassOf:
+        ActionType
+
+Class: ContactCounterparty
+    SubClassOf:
+        ActionType
+
+Class: EscalateSettlementIssue
+    SubClassOf:
+        ActionType
+
+
+### Business rule
+
+Class: BusinessRule
+
+Class: SettlementSSIRule
+    SubClassOf:
+        BusinessRule
+
+# Example meaning:
+#
+# Use the SSI applicable on the settlement date
+# unless an authorised exception exists.
+#
+# The rule constrains acceptable behaviour.
+# It does not itself describe the full investigation procedure.
+
+
+### Procedure specification
+
+Class: ProcedureSpecification
+
+Class: SettlementMismatchProcedure
+    SubClassOf:
+        ProcedureSpecification
+
+ObjectProperty: supportsComplianceWith
+    Domain: ProcedureSpecification
+    Range: BusinessRule
+
+ObjectProperty: procedureForSituation
+    Domain: ProcedureSpecification
+    Range: SituationType
+
+ObjectProperty: includesAction
+    Domain: ProcedureSpecification
+    Range: ActionType
+
+Class: SettlementMismatchInvestigationProcedure
+    SubClassOf:
+        SettlementMismatchProcedure,
+        supportsComplianceWith some SettlementSSIRule,
+        procedureForSituation some SSIAccountMismatch,
+        includesAction some IdentifyApplicableSSI,
+        includesAction some CompareSettlementAccount,
+        includesAction some CheckApprovedException,
+        includesAction some ReviewSSIChangeHistory,
+        includesAction some ContactCounterparty,
+        includesAction some EscalateSettlementIssue
+
+# ProcedureSpecification describes an expected way of working.
+#
+# It is not the same thing as the actual performance of that work.
+
+
+### Procedure execution
+
+Class: ProcedureExecution
+
+ObjectProperty: followsProcedure
+    Domain: ProcedureExecution
+    Range: ProcedureSpecification
+
+ObjectProperty: executionConcerns
+    Domain: ProcedureExecution
+
+Class: SettlementMismatchInvestigationExecution
+    SubClassOf:
+        ProcedureExecution,
+        followsProcedure some SettlementMismatchInvestigationProcedure,
+        executionConcerns some SettlementInstruction
+
+# ProcedureSpecification
+#     !=
+# ProcedureExecution
+
+
+### Workflow boundary
+
+Class: WorkflowDefinition
+
+Class: WorkflowExecution
+
+ObjectProperty: implementsProcedure
+    Domain: WorkflowDefinition
+    Range: ProcedureSpecification
+
+ObjectProperty: executesWorkflow
+    Domain: WorkflowExecution
+    Range: WorkflowDefinition
+
+# A procedure may be partly or fully implemented through a workflow.
+#
+# ProcedureSpecification
+#     !=
+# WorkflowDefinition
+#     !=
+# WorkflowExecution
+#
+# A procedure does not have to encode every branch as deterministic
+# workflow logic.
+
+
+### Guidance
+
+Class: Guidance
+
+ObjectProperty: providesGuidanceFor
+    Domain: Guidance
+    Range: SituationType
+
+ObjectProperty: recommendsAction
+    Domain: Guidance
+    Range: ActionType
+
+Class: RecentSSIChangeGuidance
+    SubClassOf:
+        Guidance,
+        providesGuidanceFor some SSIAccountMismatch,
+        recommendsAction some ReviewSSIChangeHistory
+
+# Guidance recommends an interpretation or action.
+# It is not automatically mandatory.
+
+
+### Heuristic
+
+Class: Heuristic
+
+Class: HeuristicRationale
+
+ObjectProperty: relevantToSituation
+    Domain: Heuristic
+    Range: SituationType
+
+ObjectProperty: suggestsAction
+    Domain: Heuristic
+    Range: ActionType
+
+ObjectProperty: hasHeuristicRationale
+    Domain: Heuristic
+    Range: HeuristicRationale
+
+Class: RecentSSIChangeHeuristic
+    SubClassOf:
+        Heuristic,
+        relevantToSituation some SSIAccountMismatch,
+        suggestsAction some ReviewSSIChangeHistory,
+        hasHeuristicRationale some HeuristicRationale
+
+# Example heuristic:
+#
+# If the SSI changed very recently, check static-data history first.
+#
+# This is not modelled as a BusinessRule.
+# It helps practitioners navigate uncertainty rather than constraining
+# what must or must not happen.
+
+Datatype: xsd:dateTime
+Datatype: xsd:decimal
+
+### Heuristic context
+
+Class: OperationalContext
+
+Class: SecuritiesSettlementOperations
+    SubClassOf:
+        OperationalContext
+
+ObjectProperty: learnedInContext
+    Domain: Heuristic
+    Range: OperationalContext
+
+DataProperty: consideredUsefulFrom
+    Domain: Heuristic
+    Range: xsd:dateTime
+
+DataProperty: consideredUsefulUntil
+    Domain: Heuristic
+    Range: xsd:dateTime
+
+Class: ContextualRecentSSIChangeHeuristic
+    SubClassOf:
+        RecentSSIChangeHeuristic,
+        learnedInContext some SecuritiesSettlementOperations
+
+# Rule applicability and heuristic relevance are different semantics.
+#
+# Rule applicability asks:
+#
+#     Does this normative requirement govern this case?
+#
+# Heuristic relevance asks:
+#
+#     Is this previous experience likely to help in this situation?
+
+
+### Empirical patterns
+
+Class: EmpiricalPattern
+
+Class: SettlementBreakPattern
+    SubClassOf:
+        EmpiricalPattern
+
+ObjectProperty: observedForSituation
+    Domain: EmpiricalPattern
+    Range: SituationType
+
+DataProperty: observedFrequency
+    Domain: EmpiricalPattern
+    Range: xsd:decimal
+
+# Example empirical statement:
+#
+# A high proportion of SSI account mismatches followed recent
+# static-data changes.
+#
+# This describes an observed historical pattern.
+# It is not itself practical advice.
+
+
+### Empirical pattern supporting a heuristic
+
+ObjectProperty: supportsHeuristic
+    Domain: EmpiricalPattern
+    Range: Heuristic
+
+Class: RecentStaticDataChangePattern
+    SubClassOf:
+        SettlementBreakPattern,
+        observedForSituation some SSIAccountMismatch,
+        supportsHeuristic some RecentSSIChangeHeuristic
+
+# EmpiricalPattern
+#     !=
+# Heuristic
+#
+# An empirical pattern may motivate or support a heuristic, but the
+# observation does not itself tell practitioners what action to take.
+
+
+### Candidate and accepted heuristics
+
+Class: CandidateHeuristic
+    SubClassOf:
+        Heuristic
+
+Class: AcceptedInstitutionalHeuristic
+    SubClassOf:
+        Heuristic
+
+# These classes illustrate a possible governance distinction.
+#
+# An AI-discovered pattern may motivate a CandidateHeuristic.
+# It does not automatically become an AcceptedInstitutionalHeuristic.
+#
+# This ontology deliberately does not model the approval process yet.
+
+
+### AI-discovered analytical pattern
+
+Class: DiscoveredPattern
+    SubClassOf:
+        EmpiricalPattern
+
+Class: AIDiscoveredPattern
+    SubClassOf:
+        DiscoveredPattern
+
+ObjectProperty: motivatesCandidateHeuristic
+    Domain: EmpiricalPattern
+    Range: CandidateHeuristic
+
+# AIDiscoveredPattern
+#     !=
+# AcceptedInstitutionalHeuristic
+#
+# Statistical discovery and institutional acceptance are different acts.
+
+
+### Practical relationship between procedure and guidance
+
+ObjectProperty: usesGuidance
+    Domain: ProcedureSpecification
+    Range: Guidance
+
+ObjectProperty: informedByHeuristic
+    Domain: ProcedureSpecification
+    Range: Heuristic
+
+Class: ExperienceInformedSettlementProcedure
+    SubClassOf:
+        SettlementMismatchInvestigationProcedure,
+        usesGuidance some RecentSSIChangeGuidance,
+        informedByHeuristic some RecentSSIChangeHeuristic
+
+# These relationships do not make Guidance or Heuristic components
+# that every procedure must contain.
+#
+# They simply allow practical knowledge to inform a procedure where
+# that relationship is meaningful.
+
+
+### Focused category distinctions
+
+DisjointClasses:
+    BusinessRule,
+    ProcedureExecution
+
+DisjointClasses:
+    ProcedureSpecification,
+    ProcedureExecution
+
+DisjointClasses:
+    ProcedureSpecification,
+    WorkflowDefinition
+
+DisjointClasses:
+    WorkflowDefinition,
+    WorkflowExecution
+
+DisjointClasses:
+    EmpiricalPattern,
+    Heuristic
+
+# We deliberately do not declare BusinessRule, ProcedureSpecification,
+# Guidance and Heuristic mutually disjoint at the generic level.
+#
+# Their semantic meanings are different, but whether particular kinds
+# of institutional content can overlap requires a stronger modelling
+# commitment than this focused example needs.
+

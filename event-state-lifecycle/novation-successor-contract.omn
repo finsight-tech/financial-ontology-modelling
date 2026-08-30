@@ -1,0 +1,83 @@
+Prefix: : <https://finsight-tech.com/ontology/examples/identity-persistence/novation#>
+
+Ontology: <https://finsight-tech.com/ontology/examples/identity-persistence/novation>
+
+
+# ************************************************************************
+# Novation - Successor Contract Lineage
+# ************************************************************************
+#
+# Models a focused novation case in which one contractual identity ends and
+# a successor contractual identity begins. Lineage is represented explicitly
+# without asserting that predecessor and successor are the same individual.
+#
+
+
+### Core financial concepts
+
+Class: FinancialContract
+
+Class: BusinessEvent
+
+Class: NovationEvent
+    SubClassOf: BusinessEvent
+
+
+### Novation relationships
+
+ObjectProperty: endsContract
+    Domain: NovationEvent
+    Range: FinancialContract
+
+ObjectProperty: establishesContract
+    Domain: NovationEvent
+    Range: FinancialContract
+
+ObjectProperty: succeededBy
+    Domain: FinancialContract
+    Range: FinancialContract
+
+ObjectProperty: precededBy
+    Domain: FinancialContract
+    Range: FinancialContract
+    InverseOf: succeededBy
+
+
+### Focused novation semantics
+
+# This experiment assumes one predecessor contract and one successor
+# contract for the novation being modelled.
+
+Class: ContractNovation
+    SubClassOf:
+        NovationEvent,
+        endsContract exactly 1 FinancialContract,
+        establishesContract exactly 1 FinancialContract
+
+
+### Contracts participating in lineage
+
+Class: ContractWithSuccessor
+    EquivalentTo:
+        FinancialContract and succeededBy some FinancialContract
+
+Class: ContractWithPredecessor
+    EquivalentTo:
+        FinancialContract and precededBy some FinancialContract
+
+
+### Modelling boundaries
+
+# succeededBy represents lineage, not identity.
+#
+# Do not use owl:sameAs / SameIndividual merely because two contracts are
+# economically connected, one replaces the other, or they belong to one
+# lifecycle history.
+#
+# In OWL, owl:sameAs means that two references denote the same individual.
+# A predecessor and a genuine successor are instead distinct financial
+# things connected by a lineage relationship.
+#
+# Whether a real-world event called "novation" crosses the identity boundary
+# depends on what FinancialContract, Trade and related concepts mean in the
+# domain ontology. The event name alone does not decide ontology identity.

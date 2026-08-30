@@ -1,0 +1,168 @@
+Prefix: : <https://finsight-tech.com/ontology/examples/position-context#>
+Prefix: xsd: <http://www.w3.org/2001/XMLSchema#>
+
+Ontology: <https://finsight-tech.com/ontology/examples/position-context>
+
+
+# ************************************************************************
+# Position Context
+# ************************************************************************
+#
+# Explores three meanings often hidden behind the word "position":
+# a continuing holding context, a point-in-time observation, and a derived
+# holding result. These meanings may coexist in the same institution.
+#
+
+Datatype: xsd:dateTime
+Datatype: xsd:decimal
+Datatype: xsd:string
+
+### Core financial concepts
+
+Class: Portfolio
+
+Class: FinancialInstrument
+
+# Position is modelled here as a continuing holding context.
+# This is one candidate interpretation, not a universal definition.
+
+Class: Position
+
+ObjectProperty: positionFor
+    Domain: Position
+    Range: Portfolio
+
+ObjectProperty: inInstrument
+    Domain: Position
+    Range: FinancialInstrument
+
+Class: SingleInstrumentPosition
+    SubClassOf:
+        Position,
+        positionFor exactly 1 Portfolio,
+        inInstrument exactly 1 FinancialInstrument
+
+
+### Point-in-time observations
+
+Class: PositionObservation
+
+ObjectProperty: concernsPosition
+    Domain: PositionObservation
+    Range: Position
+
+DataProperty: asOf
+    Range: xsd:dateTime
+
+DataProperty: reportedAt
+    Range: xsd:dateTime
+
+DataProperty: quantityValue
+    Range: xsd:decimal
+
+Class: QuantityBasis
+
+Class: NominalQuantityBasis
+    SubClassOf: QuantityBasis
+
+ObjectProperty: hasQuantityBasis
+    Range: QuantityBasis
+
+Class: PointInTimePositionObservation
+    SubClassOf:
+        PositionObservation,
+        concernsPosition exactly 1 Position,
+        asOf exactly 1 xsd:dateTime,
+        quantityValue exactly 1 xsd:decimal,
+        hasQuantityBasis exactly 1 QuantityBasis
+
+# A reported observation preserves what a system or process stated at the
+# time. It is not automatically replaced by a later recomputation.
+
+Class: ReportedPositionObservation
+    SubClassOf:
+        PointInTimePositionObservation,
+        reportedAt exactly 1 xsd:dateTime
+
+
+### Derived position results
+
+Class: PositionCalculation
+
+Class: PositionCalculationInput
+
+Class: TransactionHistoryInput
+    SubClassOf: PositionCalculationInput
+
+Class: CorporateActionInput
+    SubClassOf: PositionCalculationInput
+
+Class: SettlementInput
+    SubClassOf: PositionCalculationInput
+
+Class: PositionResult
+
+ObjectProperty: usesInput
+    Domain: PositionCalculation
+    Range: PositionCalculationInput
+
+ObjectProperty: produces
+    Domain: PositionCalculation
+    Range: PositionResult
+
+ObjectProperty: resultForPortfolio
+    Domain: PositionResult
+    Range: Portfolio
+
+ObjectProperty: resultForInstrument
+    Domain: PositionResult
+    Range: FinancialInstrument
+
+DataProperty: calculatedAt
+    Domain: PositionResult
+    Range: xsd:dateTime
+
+DataProperty: resultQuantity
+    Domain: PositionResult
+    Range: xsd:decimal
+
+ObjectProperty: resultQuantityBasis
+    Domain: PositionResult
+    Range: QuantityBasis
+
+Class: PointInTimePositionResult
+    SubClassOf:
+        PositionResult,
+        resultForPortfolio exactly 1 Portfolio,
+        resultForInstrument exactly 1 FinancialInstrument,
+        asOf exactly 1 xsd:dateTime,
+        calculatedAt exactly 1 xsd:dateTime,
+        resultQuantity exactly 1 xsd:decimal,
+        resultQuantityBasis exactly 1 QuantityBasis
+
+Class: PositionRecalculation
+    SubClassOf:
+        PositionCalculation,
+        produces some PointInTimePositionResult
+
+
+### Optional link between result and continuing position context
+
+# A derived result may describe a continuing Position if the institution
+# models one. The property is optional because some models may use only
+# portfolio/instrument/as-of results without an enduring Position entity.
+
+ObjectProperty: describesPosition
+    Domain: PositionResult
+    Range: Position
+
+
+### Direct holding statement
+
+# A direct Portfolio -> FinancialInstrument relationship may be sufficient
+# for simple questions. It is not declared equivalent to Position here.
+
+ObjectProperty: holdsInstrument
+    Domain: Portfolio
+    Range: FinancialInstrument
+

@@ -1,0 +1,149 @@
+Prefix: : <https://finsight-tech.com/ontology/examples/detail-to-thing#>
+Prefix: xsd: <http://www.w3.org/2001/XMLSchema#>
+
+Ontology: <https://finsight-tech.com/ontology/examples/detail-to-thing>
+
+
+# ************************************************************************
+# Detail to Thing - Value, Direct Description and First-Class Context
+# ************************************************************************
+#
+# Explores when a financial detail can remain a literal value, when several
+# properties can describe a financial thing directly, and when the detail
+# needs to become a first-class concept that can itself carry relationships.
+#
+
+# Built-in datatypes used below. Declared because vscode-owl-ms resolves
+# definitions through documents and imports only, with no built-in
+# namespace handling.
+Datatype: xsd:date
+Datatype: xsd:decimal
+
+
+Class: FinancialThing
+
+Class: Bond
+    SubClassOf: FinancialThing
+
+Class: Security
+    SubClassOf: FinancialThing
+
+
+### Form 1 - Literal value
+
+# A maturity date can remain a simple literal when the date itself
+# is all the business needs to know.
+
+DataProperty: maturityDate
+    Domain: Bond
+    Range: xsd:date
+
+
+### Form 2 - Direct description
+
+# Several coupon-related details can still describe the bond directly.
+# Having several properties does not by itself require a CouponTerms entity.
+
+DataProperty: couponRate
+    Domain: Bond
+    Range: xsd:decimal
+
+ObjectProperty: hasCouponFrequency
+    Domain: Bond
+    Range: PaymentFrequency
+
+ObjectProperty: hasDayCountConvention
+    Domain: Bond
+    Range: DayCountConvention
+
+
+Class: PaymentFrequency
+
+Class: DayCountConvention
+
+
+### Form 3 - First-class coupon context
+
+# CouponTerms becomes useful when the coupon arrangement itself needs
+# to be described, related, compared or given temporal context.
+
+Class: CouponTerms
+
+Class: TimePeriod
+
+ObjectProperty: hasCouponTerms
+    Domain: Bond
+    Range: CouponTerms
+
+DataProperty: hasRate
+    Domain: CouponTerms
+    Range: xsd:decimal
+
+ObjectProperty: hasFrequency
+    Domain: CouponTerms
+    Range: PaymentFrequency
+
+ObjectProperty: usesDayCountConvention
+    Domain: CouponTerms
+    Range: DayCountConvention
+
+ObjectProperty: effectiveDuring
+    Domain: CouponTerms
+    Range: TimePeriod
+
+
+### Credit rating as a first-class assessment
+
+# A rating value such as "AA" can hide several distinct concepts.
+# The assessment, grade, scale and agency are therefore modelled separately.
+
+Class: RatingAssessment
+
+Class: RatingGrade
+
+Class: RatingScale
+
+Class: RatingAgency
+
+Class: Source
+
+
+ObjectProperty: hasRatingAssessment
+    Domain: Security
+    Range: RatingAssessment
+
+ObjectProperty: hasRatingGrade
+    Domain: RatingAssessment
+    Range: RatingGrade
+
+ObjectProperty: assignedBy
+    Domain: RatingAssessment
+    Range: RatingAgency
+
+ObjectProperty: effectiveDuring
+    Domain: RatingAssessment
+    Range: TimePeriod
+
+ObjectProperty: recordedBy
+    Domain: RatingAssessment
+    Range: Source
+
+ObjectProperty: belongsToScale
+    Domain: RatingGrade
+    Range: RatingScale
+
+
+### Rating assessment semantics
+
+# A RatingAssessment concerns one Security and carries one RatingGrade.
+# The other contextual relationships remain optional in this focused example.
+
+ObjectProperty: assesses
+    Domain: RatingAssessment
+    Range: Security
+
+Class: SecurityRatingAssessment
+    SubClassOf:
+        RatingAssessment,
+        assesses exactly 1 Security,
+        hasRatingGrade exactly 1 RatingGrade

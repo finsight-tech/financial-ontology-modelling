@@ -1,0 +1,57 @@
+Prefix: : <https://finsight-tech.com/ontology/examples/real-product-models/repo#>
+
+Ontology: <https://finsight-tech.com/ontology/examples/real-product-models/repo>
+
+
+# ************************************************************************
+# Repo - Product Modelling Experiment
+# ************************************************************************
+#
+# Models a repo through agreed financing, securities-transfer, repurchase
+# and rate terms. The example describes the contractual product structure,
+# not the actual cash or securities transfer events in its lifecycle.
+#
+
+
+Class: Repo
+    SubClassOf:
+        hasCashFinancingTerms some CashFinancingTerms,
+        hasSecurityTerms some SecurityTransferTerms,
+        hasRepurchaseTerms some RepurchaseTerms,
+        hasRateTerms some RepoRateTerms
+
+
+### Contractual economic terms
+
+Class: CashFinancingTerms
+
+Class: SecurityTransferTerms
+
+Class: RepurchaseTerms
+
+Class: RepoRateTerms
+
+Class: CollateralTerms
+
+
+### Product relationships
+
+ObjectProperty: hasCashFinancingTerms
+    Domain: Repo
+    Range: CashFinancingTerms
+
+ObjectProperty: hasSecurityTerms
+    Domain: Repo
+    Range: SecurityTransferTerms
+
+ObjectProperty: hasRepurchaseTerms
+    Domain: Repo
+    Range: RepurchaseTerms
+
+ObjectProperty: hasRateTerms
+    Domain: Repo
+    Range: RepoRateTerms
+
+ObjectProperty: hasCollateralTerms
+    Domain: Repo
+    Range: CollateralTerms

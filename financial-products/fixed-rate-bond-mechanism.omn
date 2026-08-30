@@ -1,0 +1,80 @@
+Prefix: : <https://finsight-tech.com/ontology/examples/economic-mechanisms/bond#>
+
+Ontology: <https://finsight-tech.com/ontology/examples/economic-mechanisms/fixed-rate-bond>
+
+
+# ************************************************************************
+# Fixed-Rate Bond - Economic Structure
+# ************************************************************************
+#
+# Models a fixed-rate bond through principal, interest and maturity terms.
+# The example shows that the product class alone does not carry all of the
+# economic meaning of the bond.
+#
+
+
+Class: Bond
+
+
+### Economic terms
+
+Class: PrincipalTerms
+
+Class: InterestTerms
+
+Class: FixedRateInterestTerms
+    SubClassOf: InterestTerms
+
+Class: MaturityTerms
+
+Class: Rate
+
+Class: FixedRate
+    SubClassOf: Rate
+
+Class: CalculationBasis
+
+Class: PaymentSchedule
+
+
+### Product-to-terms relationships
+
+ObjectProperty: hasPrincipalTerms
+    Domain: Bond
+    Range: PrincipalTerms
+
+ObjectProperty: hasInterestTerms
+    Domain: Bond
+    Range: InterestTerms
+
+ObjectProperty: hasMaturityTerms
+    Domain: Bond
+    Range: MaturityTerms
+
+
+### Interest-term relationships
+
+ObjectProperty: hasRate
+    Domain: InterestTerms
+    Range: Rate
+
+ObjectProperty: usesCalculationBasis
+    Domain: InterestTerms
+    Range: CalculationBasis
+
+ObjectProperty: hasPaymentSchedule
+    Domain: InterestTerms
+    Range: PaymentSchedule
+
+
+### Product type described through its economic structure
+
+Class: FixedRateBond
+    EquivalentTo:
+        Bond and hasInterestTerms some FixedRateInterestTerms
+
+Class: FixedRateInterestTerms
+    SubClassOf:
+        hasRate some FixedRate,
+        usesCalculationBasis some CalculationBasis,
+        hasPaymentSchedule some PaymentSchedule
