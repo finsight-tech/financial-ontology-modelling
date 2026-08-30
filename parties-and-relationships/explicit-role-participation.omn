@@ -1,0 +1,102 @@
+Prefix: : <https://finsight-tech.com/ontology/examples/parties-and-roles#>
+
+Ontology: <https://finsight-tech.com/ontology/examples/parties-and-roles/explicit-role-participation>
+
+
+# ============================================================
+# Explicit Role Participation
+#
+# Use this form when the participation itself carries meaning
+# that cannot be expressed conveniently by a single direct
+# relationship.
+# ============================================================
+
+
+Class: Party
+
+Class: SecuritiesIssuance
+
+
+# Role participation
+
+Class: RoleParticipation
+    SubClassOf:
+        participant exactly 1 Party
+
+
+Class: IssuerParticipation
+    SubClassOf:
+        RoleParticipation,
+        roleSubject exactly 1 SecuritiesIssuance
+
+
+# Context that may describe a participation
+
+Class: TemporalInterval
+
+Class: Agreement
+
+Class: ParticipationStatus
+
+Class: BusinessEvent
+
+Class: Evidence
+
+
+# Core role relationships
+
+ObjectProperty: participant
+    Domain:
+        RoleParticipation
+    Range:
+        Party
+
+
+ObjectProperty: roleSubject
+    Domain:
+        IssuerParticipation
+    Range:
+        SecuritiesIssuance
+
+
+# ------------------------------------------------------------
+# Additional semantics carried by the participation
+#
+# These properties are available for describing a participation.
+# We do not require every RoleParticipation to have all of them.
+# Whether they are mandatory is a separate modelling decision.
+# ------------------------------------------------------------
+
+ObjectProperty: validDuring
+    Domain:
+        RoleParticipation
+    Range:
+        TemporalInterval
+
+
+ObjectProperty: governedBy
+    Domain:
+        RoleParticipation
+    Range:
+        Agreement
+
+
+ObjectProperty: participationStatus
+    Domain:
+        RoleParticipation
+    Range:
+        ParticipationStatus
+
+
+ObjectProperty: establishedBy
+    Domain:
+        RoleParticipation
+    Range:
+        BusinessEvent
+
+
+ObjectProperty: supportedBy
+    Domain:
+        RoleParticipation
+    Range:
+        Evidence

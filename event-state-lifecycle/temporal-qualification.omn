@@ -1,0 +1,186 @@
+Prefix: : <https://finsight-tech.com/ontology/examples/temporal-qualification#>
+Prefix: xsd: <http://www.w3.org/2001/XMLSchema#>
+
+Ontology: <https://finsight-tech.com/ontology/examples/temporal-qualification>
+
+
+# ************************************************************************
+# Temporal Qualification of Financial Meaning
+# ************************************************************************
+#
+# Distinguishes occurrence time, effective time, validity intervals and
+# system-recorded time. The examples show that temporal context belongs to
+# the financial meaning whose truth changes, not automatically to the thing.
+#
+
+Datatype: xsd:dateTime
+
+### Core financial concepts
+
+Class: BusinessEvent
+
+Class: AmendmentEvent
+    SubClassOf: BusinessEvent
+
+Class: Contract
+
+Class: ContractTerms
+
+Class: Settlement
+
+Class: SettlementCondition
+
+Class: OutstandingSettlementCondition
+    SubClassOf: SettlementCondition
+
+Class: Portfolio
+
+Class: LegalEntity
+
+Class: Security
+
+Class: RatingAssessment
+
+Class: TimeInstant
+
+Class: TimePeriod
+
+Class: SystemRecord
+
+Class: ContractTermsRecord
+    SubClassOf: SystemRecord
+
+
+### Occurrence time
+
+ObjectProperty: occurredAt
+    Domain: BusinessEvent
+    Range: TimeInstant
+
+
+### Effective time
+
+# The amendment event occurs at one time, while the resulting terms may
+# become effective at another time.
+
+ObjectProperty: establishesTerms
+    Domain: AmendmentEvent
+    Range: ContractTerms
+
+ObjectProperty: termsOf
+    Domain: ContractTerms
+    Range: Contract
+
+ObjectProperty: effectiveFrom
+    Domain: ContractTerms
+    Range: TimeInstant
+
+
+### Settlement condition episode
+
+Class: SettlementConditionEpisode
+    SubClassOf:
+        conditionOf exactly 1 Settlement,
+        hasCondition exactly 1 SettlementCondition
+
+ObjectProperty: conditionOf
+    Domain: SettlementConditionEpisode
+    Range: Settlement
+
+ObjectProperty: hasCondition
+    Domain: SettlementConditionEpisode
+    Range: SettlementCondition
+
+
+### Time-bounded management participation
+
+Class: ManagementParticipation
+    SubClassOf:
+        manager exactly 1 LegalEntity,
+        subject exactly 1 Portfolio
+
+ObjectProperty: manager
+    Domain: ManagementParticipation
+    Range: LegalEntity
+
+ObjectProperty: subject
+    Domain: ManagementParticipation
+    Range: Portfolio
+
+
+### Rating assessment
+
+ObjectProperty: assesses
+    Domain: RatingAssessment
+    Range: Security
+
+
+### Validity interval
+
+# validDuring intentionally has no global Domain here. It can qualify
+# different contextual concepts such as a condition episode, participation
+# or rating assessment without implying that those concepts are the same kind.
+
+ObjectProperty: validDuring
+    Range: TimePeriod
+
+
+### System-recorded time
+
+# recordedAt describes when a system representation was recorded. It is
+# not automatically the time at which the underlying financial fact became true.
+
+DataProperty: recordedAt
+    Domain: SystemRecord
+    Range: xsd:dateTime
+
+
+### Recorded representation
+
+ObjectProperty: recordsTerms
+    Domain: ContractTermsRecord
+    Range: ContractTerms
+
+
+### Focused temporal semantics
+
+Class: OutstandingSettlementEpisode
+    SubClassOf:
+        SettlementConditionEpisode,
+        hasCondition exactly 1 OutstandingSettlementCondition,
+        validDuring exactly 1 TimePeriod
+
+Class: TemporallyQualifiedManagementParticipation
+    SubClassOf:
+        ManagementParticipation,
+        validDuring exactly 1 TimePeriod
+
+Class: TemporallyQualifiedRatingAssessment
+    SubClassOf:
+        RatingAssessment,
+        validDuring exactly 1 TimePeriod
+
+
+### Modelling boundaries
+
+# AmendmentEvent
+#     occurredAt -> TimeInstant
+#
+# ContractTerms
+#     effectiveFrom -> TimeInstant
+#
+# SettlementConditionEpisode
+#     validDuring -> TimePeriod
+#
+# ContractTermsRecord
+#     recordedAt -> xsd:dateTime
+#
+# These temporal relationships answer different questions:
+#
+# occurredAt    - when did the occurrence happen?
+# effectiveFrom - when did the resulting financial meaning begin to apply?
+# validDuring   - during what interval did a fact or relationship hold?
+# recordedAt    - when did a system record the representation?
+#
+# A financial date such as maturityDate or paymentDate is a different kind
+# of meaning again. Such dates are not modelled here as temporal validity.

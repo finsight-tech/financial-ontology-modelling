@@ -1,0 +1,291 @@
+Prefix: : <https://finsight-tech.com/ontology/examples/analytical-lineage#>
+Prefix: xsd: <http://www.w3.org/2001/XMLSchema#>
+
+Ontology: <https://finsight-tech.com/ontology/examples/analytical-lineage>
+
+
+# ************************************************************************
+# Analytical Lineage
+# ************************************************************************
+#
+# Models how analytical results are produced from measurements, semantic
+# inputs, methods, parameters and assumptions. The example distinguishes
+# analytical lineage from provenance and physical data lineage.
+#
+
+Datatype: xsd:dateTime
+Datatype: xsd:decimal
+Datatype: xsd:string
+
+### Analytical measurements and results
+
+Class: AnalyticalMeasurement
+
+Class: AnalyticalResult
+
+Class: ValuationMeasurement
+    SubClassOf:
+        AnalyticalMeasurement
+
+Class: PnLMeasurement
+    SubClassOf:
+        AnalyticalMeasurement
+
+Class: RiskMeasurement
+    SubClassOf:
+        AnalyticalMeasurement
+
+Class: ValuationResult
+    SubClassOf:
+        AnalyticalResult
+
+Class: PnLResult
+    SubClassOf:
+        AnalyticalResult
+
+Class: RiskResult
+    SubClassOf:
+        AnalyticalResult
+
+
+### Producing analytical results
+
+ObjectProperty: produces
+    Domain: AnalyticalMeasurement
+    Range: AnalyticalResult
+
+# Not every attempted measurement is required to produce a result.
+# A failed or incomplete analytical run may produce no usable output.
+
+Class: CompletedAnalyticalMeasurement
+    SubClassOf:
+        AnalyticalMeasurement,
+        produces some AnalyticalResult
+
+
+### Semantic analytical inputs
+
+ObjectProperty: usesInput
+    Domain: AnalyticalMeasurement
+
+Class: PositionResult
+
+Class: MarketObservation
+
+# usesInput deliberately has no universal range.
+#
+# Analytical measurements may use different semantic inputs:
+#
+#     PositionResult
+#     MarketObservation
+#     ValuationResult
+#     another AnalyticalResult
+#
+# This avoids creating an artificial universal AnalyticalInput superclass
+# merely to satisfy the property range.
+
+
+### Reusing analytical results as inputs
+
+Class: DownstreamAnalyticalMeasurement
+    SubClassOf:
+        AnalyticalMeasurement,
+        usesInput some AnalyticalResult
+
+# An analytical result may become an input to another measurement:
+#
+#     ValuationMeasurement
+#            |
+#            | produces
+#            v
+#     ValuationResult
+#            |
+#            | used as input by
+#            v
+#       RiskMeasurement
+#            |
+#            | produces
+#            v
+#        RiskResult
+#
+# Connected usesInput / produces relationships form the lineage graph.
+
+
+### Analytical methods
+
+Class: AnalyticalMethod
+
+Class: AnalyticalMethodSpecification
+
+ObjectProperty: specificationOf
+    Domain: AnalyticalMethodSpecification
+    Range: AnalyticalMethod
+
+DataProperty: versionIdentifier
+    Domain: AnalyticalMethodSpecification
+    Range: xsd:string
+
+ObjectProperty: usesMethod
+    Domain: AnalyticalMeasurement
+    Range: AnalyticalMethodSpecification
+
+# The distinction allows the ontology to identify the exact method
+# specification used without deciding that every method version must be
+# either the same method or a completely new method.
+
+
+### Parameters
+
+Class: AnalyticalParameter
+
+ObjectProperty: usesParameter
+    Domain: AnalyticalMeasurement
+    Range: AnalyticalParameter
+
+Class: TimeHorizonParameter
+    SubClassOf:
+        AnalyticalParameter
+
+Class: ConfidenceLevelParameter
+    SubClassOf:
+        AnalyticalParameter
+
+
+### Assumptions
+
+Class: AnalyticalAssumption
+
+ObjectProperty: usesAssumption
+    Domain: AnalyticalMeasurement
+    Range: AnalyticalAssumption
+
+# Assumptions belong to analytical context.
+# They should not automatically be treated as observations of reality.
+
+
+### Focused VaR lineage example
+
+Class: VaRMethod
+    SubClassOf:
+        AnalyticalMethod
+
+Class: VaRMethodSpecification
+    SubClassOf:
+        AnalyticalMethodSpecification,
+        specificationOf some VaRMethod
+
+Class: VaRMeasurement
+    SubClassOf:
+        RiskMeasurement,
+        usesInput some PositionResult,
+        usesInput some MarketObservation,
+        usesMethod exactly 1 VaRMethodSpecification,
+        usesParameter some TimeHorizonParameter,
+        usesParameter some ConfidenceLevelParameter,
+        produces some RiskResult
+
+# This class captures the semantic structure of a VaR measurement.
+# It does not attempt to encode the mathematical VaR algorithm in OWL.
+
+
+### Restated analytical results
+
+ObjectProperty: restates
+    Domain: AnalyticalResult
+    Range: AnalyticalResult
+
+ObjectProperty: supersedes
+    Domain: AnalyticalResult
+    Range: AnalyticalResult
+
+DataProperty: calculatedAt
+    Domain: AnalyticalResult
+    Range: xsd:dateTime
+
+DataProperty: reportedAt
+    Domain: AnalyticalResult
+    Range: xsd:dateTime
+
+# A later result may restate an earlier result after corrected inputs.
+#
+# The earlier result is not semantically erased merely because a newer
+# result is now preferred.
+
+
+### Immediate production versus broader lineage
+
+# produces represents the immediate measurement-result relationship.
+#
+# Example:
+#
+#     Measurement A --> Result A
+#                           |
+#                           | used as input
+#                           v
+#                    Measurement C --> Result C
+#
+# Result C depends on Measurement A through the lineage graph, but
+# Measurement A is not therefore declared to have directly produced Result C.
+#
+# This avoids collapsing immediate production and transitive lineage.
+
+
+### Avoid generic derivedFrom
+
+# A tempting model would be:
+#
+#     RiskResult derivedFrom MarketObservation
+#
+# This hides important semantic structure.
+#
+# Prefer:
+#
+#     RiskMeasurement usesInput MarketObservation
+#     RiskMeasurement produces RiskResult
+#
+# The lineage emerges through typed relationships rather than a generic
+# derivedFrom shortcut.
+
+
+### Analytical lineage versus provenance
+
+Class: InformationSource
+
+ObjectProperty: suppliedBy
+    Range: InformationSource
+
+DataProperty: observedAt
+    Domain: MarketObservation
+    Range: xsd:dateTime
+
+# Example:
+#
+#     MarketObservation
+#         suppliedBy -> InformationSource
+#
+# suppliedBy and observedAt describe aspects of provenance.
+#
+# usesInput describes the observation's contribution to an analytical
+# result.
+#
+# Provenance and analytical lineage are related but not identical.
+
+
+### Physical data lineage boundary
+
+Class: PhysicalDataResource
+
+Class: TechnicalProcess
+
+# Physical tables, files, jobs and services may later be mapped to the
+# semantic objects in this ontology.
+#
+# They are deliberately not used as substitutes for PositionResult,
+# MarketObservation, AnalyticalMeasurement or AnalyticalResult.
+#
+# Analytical lineage:
+#     explains how analytical meaning was derived.
+#
+# Physical data lineage:
+#     explains how representations moved through technical resources.
+

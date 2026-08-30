@@ -1,0 +1,94 @@
+Prefix: : <https://finsight-tech.com/ontology/examples/economic-mechanisms/irs#>
+
+Ontology: <https://finsight-tech.com/ontology/examples/economic-mechanisms/interest-rate-swap>
+
+
+# ************************************************************************
+# Interest-Rate Swap - Economic Structure
+# ************************************************************************
+#
+# Models a fixed-versus-floating interest-rate swap through its legs.
+# The example distinguishes composition from benchmark reference and
+# calculation-basis semantics.
+#
+
+
+Class: InterestRateSwap
+
+
+### Swap components
+
+Class: SwapLeg
+
+Class: FixedRateLeg
+    SubClassOf: SwapLeg
+
+Class: FloatingRateLeg
+    SubClassOf: SwapLeg
+
+
+### Governing economic concepts
+
+Class: Benchmark
+
+Class: CalculationBasis
+
+Class: PaymentSchedule
+
+Class: Rate
+
+Class: FixedRate
+    SubClassOf: Rate
+
+Class: Spread
+
+
+### Composition relationship
+
+ObjectProperty: hasLeg
+    Domain: InterestRateSwap
+    Range: SwapLeg
+
+
+### Reference and calculation relationships
+
+ObjectProperty: referencesBenchmark
+    Domain: FloatingRateLeg
+    Range: Benchmark
+
+ObjectProperty: usesCalculationBasis
+    Domain: SwapLeg
+    Range: CalculationBasis
+
+ObjectProperty: hasPaymentSchedule
+    Domain: SwapLeg
+    Range: PaymentSchedule
+
+ObjectProperty: hasRate
+    Domain: FixedRateLeg
+    Range: Rate
+
+ObjectProperty: hasSpread
+    Domain: FloatingRateLeg
+    Range: Spread
+
+
+### Swap type described through its economic structure
+
+Class: FixedFloatInterestRateSwap
+    SubClassOf:
+        InterestRateSwap,
+        hasLeg some FixedRateLeg,
+        hasLeg some FloatingRateLeg
+
+Class: FixedRateLeg
+    SubClassOf:
+        hasRate some FixedRate,
+        usesCalculationBasis some CalculationBasis,
+        hasPaymentSchedule some PaymentSchedule
+
+Class: FloatingRateLeg
+    SubClassOf:
+        referencesBenchmark some Benchmark,
+        usesCalculationBasis some CalculationBasis,
+        hasPaymentSchedule some PaymentSchedule

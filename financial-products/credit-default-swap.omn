@@ -1,0 +1,58 @@
+Prefix: : <https://finsight-tech.com/ontology/examples/real-product-models/cds#>
+
+Ontology: <https://finsight-tech.com/ontology/examples/real-product-models/credit-default-swap>
+
+
+# ************************************************************************
+# Credit Default Swap - Product Modelling Experiment
+# ************************************************************************
+#
+# Models a credit default swap through premium, protection, reference,
+# credit-event and settlement terms. CreditEventTerms describe contractual
+# semantics and are distinct from an actual credit event occurring later.
+#
+
+
+Class: CreditDefaultSwap
+    SubClassOf:
+        hasPremiumTerms some PremiumTerms,
+        hasProtectionTerms some ProtectionTerms,
+        referencesEntity some ReferenceEntity,
+        hasCreditEventTerms some CreditEventTerms,
+        hasSettlementTerms some SettlementTerms
+
+
+### Contractual and reference concepts
+
+Class: PremiumTerms
+
+Class: ProtectionTerms
+
+Class: ReferenceEntity
+
+Class: CreditEventTerms
+
+Class: SettlementTerms
+
+
+### Product relationships
+
+ObjectProperty: hasPremiumTerms
+    Domain: CreditDefaultSwap
+    Range: PremiumTerms
+
+ObjectProperty: hasProtectionTerms
+    Domain: CreditDefaultSwap
+    Range: ProtectionTerms
+
+ObjectProperty: referencesEntity
+    Domain: CreditDefaultSwap
+    Range: ReferenceEntity
+
+ObjectProperty: hasCreditEventTerms
+    Domain: CreditDefaultSwap
+    Range: CreditEventTerms
+
+ObjectProperty: hasSettlementTerms
+    Domain: CreditDefaultSwap
+    Range: SettlementTerms

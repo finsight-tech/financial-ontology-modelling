@@ -1,0 +1,212 @@
+Prefix: : <https://finsight-tech.com/ontology/examples/valuation-context#>
+Prefix: xsd: <http://www.w3.org/2001/XMLSchema#>
+
+Ontology: <https://finsight-tech.com/ontology/examples/valuation-context>
+
+
+# ************************************************************************
+# Valuation Context
+# ************************************************************************
+#
+# Models valuation as a contextual analytical result rather than a timeless
+# property of a financial thing. It separates valuation subjects, analytical
+# measurements, results, market observations, methods, bases and timing.
+#
+
+Datatype: xsd:dateTime
+Datatype: xsd:decimal
+Datatype: xsd:string
+
+### Financial subjects
+
+Class: FinancialThing
+
+Class: FinancialInstrument
+    SubClassOf: FinancialThing
+
+Class: Position
+    SubClassOf: FinancialThing
+
+Class: Portfolio
+    SubClassOf: FinancialThing
+
+
+### Analytical measurement and result
+
+Class: AnalyticalMeasurement
+
+Class: AnalyticalResult
+
+Class: ValuationMeasurement
+    SubClassOf: AnalyticalMeasurement
+
+Class: ValuationResult
+    SubClassOf: AnalyticalResult
+
+
+### Valuation subject
+
+ObjectProperty: valuationOf
+    Domain: ValuationResult
+    Range: FinancialThing
+
+Class: FinancialValuationResult
+    SubClassOf:
+        ValuationResult,
+        valuationOf some FinancialThing
+
+# The example deliberately avoids "valuationOf exactly 1 FinancialThing"
+# at the generic level. A narrower valuation type may add that commitment.
+
+
+### Measurement produces result
+
+ObjectProperty: produces
+    Domain: AnalyticalMeasurement
+    Range: AnalyticalResult
+
+Class: ValuationMeasurementWithResult
+    SubClassOf:
+        ValuationMeasurement,
+        produces some ValuationResult
+
+
+### Monetary result
+
+DataProperty: amount
+    Domain: ValuationResult
+    Range: xsd:decimal
+
+Class: Currency
+
+ObjectProperty: currency
+    Domain: ValuationResult
+    Range: Currency
+
+
+### Valuation basis and purpose
+
+Class: ValuationBasis
+
+Class: TradingValuationBasis
+    SubClassOf: ValuationBasis
+
+Class: AccountingFairValueBasis
+    SubClassOf: ValuationBasis
+
+Class: RiskPresentValueBasis
+    SubClassOf: ValuationBasis
+
+ObjectProperty: usesValuationBasis
+    Domain: ValuationMeasurement
+    Range: ValuationBasis
+
+Class: ValuationPurpose
+
+ObjectProperty: hasValuationPurpose
+    Domain: ValuationMeasurement
+    Range: ValuationPurpose
+
+
+### Valuation method
+
+Class: ValuationMethod
+
+Class: DiscountedCashflowMethod
+    SubClassOf: ValuationMethod
+
+ObjectProperty: usesMethod
+    Domain: ValuationMeasurement
+    Range: ValuationMethod
+
+
+### Market observations as inputs
+
+Class: Observation
+
+Class: MarketObservation
+    SubClassOf: Observation
+
+Class: QuotedPriceObservation
+    SubClassOf: MarketObservation
+
+Class: TradedPriceObservation
+    SubClassOf: MarketObservation
+
+ObjectProperty: usesInput
+    Domain: AnalyticalMeasurement
+    Range: Observation
+
+# An observed market price is not automatically a ValuationResult.
+# A valuation may use one or more MarketObservation instances as inputs.
+
+
+### Model-derived price
+
+Class: ModelPriceResult
+    SubClassOf: ValuationResult
+
+# A model-derived price is an analytical result, even though business
+# language may simply call both observed and model-derived values "prices".
+
+
+### Temporal context
+
+DataProperty: valuationAsOf
+    Domain: ValuationResult
+    Range: xsd:dateTime
+
+DataProperty: marketDataCutoff
+    Domain: ValuationMeasurement
+    Range: xsd:dateTime
+
+DataProperty: calculatedAt
+    Domain: ValuationMeasurement
+    Range: xsd:dateTime
+
+DataProperty: recordedAt
+    Domain: ValuationResult
+    Range: xsd:dateTime
+
+# These timestamps may coincide, but they have different meanings:
+#
+# valuationAsOf
+#     when the valuation result applies
+#
+# marketDataCutoff
+#     which market observations were eligible as inputs
+#
+# calculatedAt
+#     when the analytical calculation ran
+#
+# recordedAt
+#     when the result was stored or recorded
+
+
+### Focused valuation types
+
+Class: PositionValuationResult
+    SubClassOf:
+        ValuationResult,
+        valuationOf exactly 1 Position
+
+Class: PortfolioValuationResult
+    SubClassOf:
+        ValuationResult,
+        valuationOf exactly 1 Portfolio
+
+Class: InstrumentValuationResult
+    SubClassOf:
+        ValuationResult,
+        valuationOf exactly 1 FinancialInstrument
+
+
+### Context-rich valuation measurement
+
+Class: ContextualValuationMeasurement
+    SubClassOf:
+        ValuationMeasurement,
+        usesValuationBasis exactly 1 ValuationBasis,
+        usesMethod some ValuationMethod,
+        produces some ValuationResult
+

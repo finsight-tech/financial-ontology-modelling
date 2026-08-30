@@ -1,0 +1,211 @@
+Prefix: : <https://finsight-tech.com/ontology/examples/cashflow-decomposition#>
+Prefix: xsd: <http://www.w3.org/2001/XMLSchema#>
+
+Ontology: <https://finsight-tech.com/ontology/examples/cashflow-decomposition>
+
+
+# ************************************************************************
+# Cashflow Decomposition
+# ************************************************************************
+#
+# Decomposes the overloaded business word "cashflow" into forecasts,
+# distribution terms, entitlements, obligations, payments and optional
+# funds transfers. These meanings belong to one story but are not one class.
+#
+
+Datatype: xsd:dateTime
+Datatype: xsd:decimal
+
+
+### Core financial concepts
+
+Class: Party
+
+Class: Portfolio
+
+Class: FinancialInstrument
+
+Class: Equity
+    SubClassOf: FinancialInstrument
+
+Class: Bond
+    SubClassOf: FinancialInstrument
+
+Class: HoldingContext
+
+ObjectProperty: holdingFor
+    Domain: HoldingContext
+    Range: Portfolio
+
+ObjectProperty: holdingIn
+    Domain: HoldingContext
+    Range: FinancialInstrument
+
+
+### Business events
+
+Class: BusinessEvent
+
+Class: DividendDeclarationEvent
+    SubClassOf: BusinessEvent
+
+Class: Payment
+    SubClassOf: BusinessEvent
+
+Class: FundsTransfer
+    SubClassOf: BusinessEvent
+
+
+### Forecast meaning
+
+Class: Forecast
+
+Class: DividendForecast
+    SubClassOf: Forecast
+
+Class: ForecastDividendOutcome
+
+ObjectProperty: forecastsOutcome
+    Domain: DividendForecast
+    Range: ForecastDividendOutcome
+
+# The forecast describes a possible future economic outcome.
+# It does not require an already-existing PaymentObligation.
+
+
+### Dividend distribution terms
+
+Class: DividendDistribution
+
+ObjectProperty: establishesDistribution
+    Domain: DividendDeclarationEvent
+    Range: DividendDistribution
+
+DataProperty: amountPerShare
+    Domain: DividendDistribution
+    Range: xsd:decimal
+
+DataProperty: recordDate
+    Domain: DividendDistribution
+    Range: xsd:dateTime
+
+DataProperty: paymentDate
+    Domain: DividendDistribution
+    Range: xsd:dateTime
+
+ObjectProperty: appliesToEquity
+    Domain: DividendDistribution
+    Range: Equity
+
+
+### Investor-specific entitlement
+
+Class: DividendEntitlement
+
+ObjectProperty: arisesUnderDistribution
+    Domain: DividendEntitlement
+    Range: DividendDistribution
+
+ObjectProperty: entitlementFor
+    Domain: DividendEntitlement
+    Range: HoldingContext
+
+ObjectProperty: entitledParty
+    Domain: DividendEntitlement
+    Range: Party
+
+DataProperty: entitledAmount
+    Domain: DividendEntitlement
+    Range: xsd:decimal
+
+# DividendDistribution and DividendEntitlement are kept separate:
+# one distribution may support many holder-specific entitlements.
+
+
+### Payment obligation
+
+Class: PaymentObligation
+
+ObjectProperty: obligor
+    Domain: PaymentObligation
+    Range: Party
+
+ObjectProperty: obligee
+    Domain: PaymentObligation
+    Range: Party
+
+DataProperty: obligationAmount
+    Domain: PaymentObligation
+    Range: xsd:decimal
+
+ObjectProperty: relatedPaymentObligation
+    Domain: DividendEntitlement
+    Range: PaymentObligation
+
+# Entitlement and obligation are not declared equivalent or disjoint.
+# They may be modelled separately or as complementary perspectives,
+# depending on the business semantics required.
+
+
+### Obligation-performance pattern
+
+ObjectProperty: appliedTo
+    Domain: Payment
+    Range: PaymentObligation
+
+DisjointClasses:
+    Payment,
+    PaymentObligation
+
+# A Payment is an occurrence.
+# A PaymentObligation is something owed.
+
+
+### Optional funds-transfer layer
+
+ObjectProperty: realisedThrough
+    Domain: Payment
+    Range: FundsTransfer
+
+# realisedThrough is optional.
+# A simple ontology may model Payment alone.
+# A richer model may distinguish one business payment from one or more
+# settlement movements used to realise it.
+
+
+### Bond coupon path
+
+Class: BondTerms
+
+Class: PaymentTerms
+
+Class: CouponPaymentTerms
+    SubClassOf: PaymentTerms
+
+ObjectProperty: hasBondTerms
+    Domain: Bond
+    Range: BondTerms
+
+ObjectProperty: specifiesPaymentTerms
+    Domain: BondTerms
+    Range: PaymentTerms
+
+ObjectProperty: groundsObligation
+    Domain: PaymentTerms
+    Range: PaymentObligation
+
+# The bond path is intentionally different from the dividend path.
+#
+# BondTerms
+#     specifiesPaymentTerms -> PaymentTerms
+#     groundsObligation     -> PaymentObligation
+#
+# DividendDeclarationEvent
+#     establishesDistribution -> DividendDistribution
+#
+# DividendDistribution
+#     may support holder-specific DividendEntitlement
+#
+# DividendEntitlement
+#     may be related to a PaymentObligation
+

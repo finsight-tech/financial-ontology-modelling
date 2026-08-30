@@ -1,0 +1,78 @@
+Prefix: : <https://finsight-tech.com/ontology/examples/real-product-models/irs#>
+
+Ontology: <https://finsight-tech.com/ontology/examples/real-product-models/interest-rate-swap>
+
+
+# ************************************************************************
+# Interest-Rate Swap - Product Modelling Experiment
+# ************************************************************************
+#
+# Models a fixed-versus-floating interest-rate swap through its legs,
+# benchmark reference, calculation basis and payment schedule.
+#
+
+
+Class: InterestRateSwap
+
+
+### Swap components
+
+Class: SwapLeg
+
+Class: FixedRateLeg
+    SubClassOf: SwapLeg
+
+Class: FloatingRateLeg
+    SubClassOf: SwapLeg
+
+
+### Governing economic concepts
+
+Class: Benchmark
+
+Class: CalculationBasis
+
+Class: PaymentSchedule
+
+Class: FixedRate
+
+Class: Spread
+
+
+### Composition relationship
+
+ObjectProperty: hasLeg
+    Domain: InterestRateSwap
+    Range: SwapLeg
+
+
+### Reference and calculation relationships
+
+ObjectProperty: referencesBenchmark
+    Domain: FloatingRateLeg
+    Range: Benchmark
+
+ObjectProperty: usesCalculationBasis
+    Domain: SwapLeg
+    Range: CalculationBasis
+
+ObjectProperty: hasPaymentSchedule
+    Domain: SwapLeg
+    Range: PaymentSchedule
+
+ObjectProperty: hasFixedRate
+    Domain: FixedRateLeg
+    Range: FixedRate
+
+ObjectProperty: hasSpread
+    Domain: FloatingRateLeg
+    Range: Spread
+
+
+### Swap type described through its economic structure
+
+Class: FixedFloatInterestRateSwap
+    SubClassOf:
+        InterestRateSwap,
+        hasLeg some FixedRateLeg,
+        hasLeg some FloatingRateLeg

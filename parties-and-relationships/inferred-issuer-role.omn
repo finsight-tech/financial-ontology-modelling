@@ -1,0 +1,28 @@
+Prefix: : <https://finsight-tech.com/ontology/examples/parties-and-roles#>
+
+Ontology: <https://finsight-tech.com/ontology/examples/parties-and-roles/inferred-issuer-role>
+
+
+# ============================================================
+# derived role form
+#
+# Issuer is a contextual category defined from the relationship
+# that makes the issuer description applicable.
+# ============================================================
+
+Class: Party
+
+Class: SecuritiesIssuance
+
+ObjectProperty: issuerOf
+    Domain:
+        Party
+    Range:
+        SecuritiesIssuance
+
+# Read as:
+# an Issuer is a Party that is issuer of at least one SecuritiesIssuance.
+Class: Issuer
+    EquivalentTo:
+        Party and issuerOf some SecuritiesIssuance
+

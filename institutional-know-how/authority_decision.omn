@@ -1,0 +1,525 @@
+Prefix: : <https://finsight-tech.com/ontology/examples/authority-decision#>
+Prefix: xsd: <http://www.w3.org/2001/XMLSchema#>
+
+Ontology: <https://finsight-tech.com/ontology/examples/authority-decision>
+
+
+# ************************************************************************
+# Authority Assignment and Decision
+# ************************************************************************
+#
+# Models institutional authority separately from organisational roles and
+# from decisions made under that authority. The settlement example covers
+# scoped authority, limits, delegation, exceptions and escalation.
+#
+
+Datatype: xsd:dateTime
+Datatype: xsd:decimal
+
+### Parties, roles and automated agents
+
+Class: Party
+
+Class: Person
+    SubClassOf:
+        Party
+
+Class: OrganisationalBody
+    SubClassOf:
+        Party
+
+Class: OrganisationalRole
+
+Class: OperationsManagerRole
+    SubClassOf:
+        OrganisationalRole
+
+Class: HeadOfOperationsRole
+    SubClassOf:
+        OrganisationalRole
+
+Class: AutomatedAgent
+
+
+### Decision types
+
+Class: DecisionType
+
+Class: SettlementExceptionDecisionType
+    SubClassOf:
+        DecisionType
+
+Class: SettlementOverrideDecisionType
+    SubClassOf:
+        DecisionType
+
+
+### Authority assignment
+
+Class: AuthorityAssignment
+
+ObjectProperty: grantedToRole
+    Domain: AuthorityAssignment
+    Range: OrganisationalRole
+
+ObjectProperty: grantedToParty
+    Domain: AuthorityAssignment
+    Range: Party
+
+ObjectProperty: grantedToAgent
+    Domain: AuthorityAssignment
+    Range: AutomatedAgent
+
+ObjectProperty: authorises
+    Domain: AuthorityAssignment
+    Range: DecisionType
+
+# Authority is represented through an AuthorityAssignment rather than
+# being inferred directly from a job title or organisational role.
+#
+# Role
+#     !=
+# AuthorityAssignment
+
+
+### Focused settlement authority
+
+Class: SettlementExceptionAuthorityAssignment
+    SubClassOf:
+        AuthorityAssignment,
+        authorises some SettlementExceptionDecisionType
+
+Class: OperationsManagerSettlementAuthority
+    SubClassOf:
+        SettlementExceptionAuthorityAssignment,
+        grantedToRole some OperationsManagerRole
+
+
+### Authority scope
+
+Class: AuthorityScope
+
+Class: BusinessScope
+    SubClassOf:
+        AuthorityScope
+
+Class: OrganisationalScope
+    SubClassOf:
+        AuthorityScope
+
+Class: ProductScope
+    SubClassOf:
+        AuthorityScope
+
+Class: MarketScope
+    SubClassOf:
+        AuthorityScope
+
+ObjectProperty: withinScope
+    Domain: AuthorityAssignment
+    Range: AuthorityScope
+
+Class: UKSecuritiesSettlementScope
+    SubClassOf:
+        BusinessScope
+
+Class: FatCatSecuritiesScope
+    SubClassOf:
+        OrganisationalScope
+
+Class: ScopedOperationsManagerSettlementAuthority
+    SubClassOf:
+        OperationsManagerSettlementAuthority,
+        withinScope some UKSecuritiesSettlementScope,
+        withinScope some FatCatSecuritiesScope
+
+# Rule scope and authority scope are different.
+#
+# Rule scope:
+#     where a normative requirement applies.
+#
+# Authority scope:
+#     where permission to make a decision applies.
+
+
+### Authority limits
+
+Class: AuthorityLimit
+
+Class: MonetaryAuthorityLimit
+    SubClassOf:
+        AuthorityLimit
+
+ObjectProperty: subjectToLimit
+    Domain: AuthorityAssignment
+    Range: AuthorityLimit
+
+DataProperty: maximumAmount
+    Domain: MonetaryAuthorityLimit
+    Range: xsd:decimal
+
+# OWL records the existence and structure of a limit.
+#
+# It does not by itself compare a settlement amount against the limit
+# and infer that an authority assignment is sufficient for the case.
+
+
+### Temporal validity of authority
+
+DataProperty: authorityValidFrom
+    Domain: AuthorityAssignment
+    Range: xsd:dateTime
+
+DataProperty: authorityValidUntil
+    Domain: AuthorityAssignment
+    Range: xsd:dateTime
+
+# Authority is not assumed to be a timeless property of a person or role.
+#
+# Historical authorisation depends on the authority assignment that was
+# valid when the decision was made.
+
+
+### Delegation
+
+Class: Delegation
+
+ObjectProperty: establishesAuthorityAssignment
+    Domain: Delegation
+    Range: AuthorityAssignment
+
+ObjectProperty: delegatedByRole
+    Domain: Delegation
+    Range: OrganisationalRole
+
+ObjectProperty: delegatedToRole
+    Domain: Delegation
+    Range: OrganisationalRole
+
+# Delegation may establish an AuthorityAssignment.
+#
+# AuthorityAssignment
+#     !=
+# document or record describing the delegation
+
+
+### Decisions
+
+Class: Decision
+
+Class: GovernedDecision
+    SubClassOf:
+        Decision
+
+ObjectProperty: hasDecisionType
+    Domain: Decision
+    Range: DecisionType
+
+ObjectProperty: madeUnderAuthority
+    Domain: GovernedDecision
+    Range: AuthorityAssignment
+
+DataProperty: decidedAt
+    Domain: Decision
+    Range: xsd:dateTime
+
+# AuthorityAssignment
+#     !=
+# Decision
+#
+# Authority permits a kind of decision.
+# Decision represents what was actually decided in a particular case.
+
+
+### Decision outcomes
+
+Class: DecisionOutcome
+
+Class: ApprovedOutcome
+    SubClassOf:
+        DecisionOutcome
+
+Class: RejectedOutcome
+    SubClassOf:
+        DecisionOutcome
+
+Class: MoreInformationRequiredOutcome
+    SubClassOf:
+        DecisionOutcome
+
+ObjectProperty: hasDecisionOutcome
+    Domain: Decision
+    Range: DecisionOutcome
+
+# Decision
+#     !=
+# DecisionOutcome
+
+
+### Settlement decision
+
+Class: SettlementExceptionDecision
+    SubClassOf:
+        GovernedDecision,
+        hasDecisionType some SettlementExceptionDecisionType,
+        madeUnderAuthority some SettlementExceptionAuthorityAssignment,
+        hasDecisionOutcome some DecisionOutcome
+
+
+### Exception request
+
+Class: ExceptionRequest
+
+Class: SettlementExceptionRequest
+    SubClassOf:
+        ExceptionRequest
+
+ObjectProperty: concernsExceptionRequest
+    Domain: Decision
+    Range: ExceptionRequest
+
+Class: SettlementExceptionRequestDecision
+    SubClassOf:
+        SettlementExceptionDecision,
+        concernsExceptionRequest some SettlementExceptionRequest
+
+# ExceptionRequest
+#     !=
+# Decision
+#
+# A request asks for institutional permission.
+# The decision determines what happens to that request.
+
+
+### Authorised exception
+
+Class: AuthorisedException
+
+ObjectProperty: establishesAuthorisedException
+    Domain: Decision
+    Range: AuthorisedException
+
+Class: ApprovedSettlementExceptionDecision
+    SubClassOf:
+        SettlementExceptionDecision,
+        hasDecisionOutcome some ApprovedOutcome,
+        establishesAuthorisedException some AuthorisedException
+
+# ExceptionRequest
+#     !=
+# SettlementExceptionDecision
+#     !=
+# AuthorisedException
+
+
+### Override
+
+Class: Override
+
+Class: SettlementOverride
+    SubClassOf:
+        Override
+
+ObjectProperty: authorisesOverride
+    Domain: Decision
+    Range: Override
+
+Class: SettlementOverrideDecision
+    SubClassOf:
+        GovernedDecision,
+        hasDecisionType some SettlementOverrideDecisionType,
+        authorisesOverride some SettlementOverride
+
+# Exception and override are kept separate.
+#
+# The exact distinction is institution-dependent:
+#
+# Exception:
+#     may represent a recognised alternative within a rule framework.
+#
+# Override:
+#     may represent an authorised departure from the normally determined
+#     outcome in a particular case.
+
+
+### Escalation
+
+Class: Escalation
+
+ObjectProperty: escalatesDecisionRequest
+    Domain: Escalation
+    Range: ExceptionRequest
+
+ObjectProperty: escalatesToRole
+    Domain: Escalation
+    Range: OrganisationalRole
+
+Class: SettlementExceptionEscalation
+    SubClassOf:
+        Escalation,
+        escalatesDecisionRequest some SettlementExceptionRequest,
+        escalatesToRole some HeadOfOperationsRole
+
+# Escalation changes the decision path.
+#
+# Escalation
+#     !=
+# ApprovedOutcome
+#
+# Escalation
+#     !=
+# RejectedOutcome
+
+
+### Authority sufficiency boundary
+
+Class: AuthoritySufficiencyAssessment
+
+ObjectProperty: assessesAuthorityAssignment
+    Domain: AuthoritySufficiencyAssessment
+    Range: AuthorityAssignment
+
+ObjectProperty: assessesDecision
+    Domain: AuthoritySufficiencyAssessment
+    Range: Decision
+
+Class: SufficientAuthorityAssessment
+    SubClassOf:
+        AuthoritySufficiencyAssessment
+
+Class: InsufficientAuthorityAssessment
+    SubClassOf:
+        AuthoritySufficiencyAssessment
+
+DisjointClasses:
+    SufficientAuthorityAssessment,
+    InsufficientAuthorityAssessment
+
+# An AuthorityAssignment may exist but still be insufficient for one case,
+# for example because an amount exceeds the authorised limit.
+#
+# Authority exists
+#     !=
+# Authority sufficient for this decision
+
+
+### Decision occurrence versus valid authorisation
+
+Class: DecisionAuthorisationAssessment
+
+ObjectProperty: assessesDecisionAuthorisation
+    Domain: DecisionAuthorisationAssessment
+    Range: Decision
+
+Class: ProperlyAuthorisedAssessment
+    SubClassOf:
+        DecisionAuthorisationAssessment
+
+Class: ImproperlyAuthorisedAssessment
+    SubClassOf:
+        DecisionAuthorisationAssessment
+
+DisjointClasses:
+    ProperlyAuthorisedAssessment,
+    ImproperlyAuthorisedAssessment
+
+# A Decision can occur even when the decision maker exceeded authority.
+#
+# Decision occurrence
+#     !=
+# valid authorisation
+#
+# The existence of an approval record must therefore not be used to infer
+# automatically that sufficient authority existed.
+
+
+### AI recommendation versus authority
+
+Class: DecisionRecommendation
+
+ObjectProperty: recommendationFor
+    Domain: DecisionRecommendation
+    Range: DecisionType
+
+ObjectProperty: producedByAgent
+    Domain: DecisionRecommendation
+    Range: AutomatedAgent
+
+Class: AutomatedSettlementDecisionRecommendation
+    SubClassOf:
+        DecisionRecommendation,
+        recommendationFor some SettlementExceptionDecisionType,
+        producedByAgent some AutomatedAgent
+
+# An AI may recommend an outcome without holding authority to decide.
+#
+# Capability
+#     !=
+# AuthorityAssignment
+#
+# Technical execution
+#     !=
+# institutional authority
+#
+# Automation does not create authority. Authority must arise from the
+# institution's governance arrangement.
+
+
+### Automated authority
+
+Class: AutomatedDecisionAuthority
+    SubClassOf:
+        AuthorityAssignment,
+        grantedToAgent some AutomatedAgent
+
+# The model permits authority to be explicitly assigned to an automated
+# agent where institutional governance allows it.
+#
+# It is never inferred merely because the agent can perform the analysis.
+
+
+### Joint authority boundary
+
+Class: JointAuthorityArrangement
+
+ObjectProperty: includesAuthorityAssignment
+    Domain: JointAuthorityArrangement
+    Range: AuthorityAssignment
+
+# Some decisions may require several authority assignments, dual approval
+# or committee agreement.
+#
+# The generic Decision class therefore does not use:
+#
+#     madeUnderAuthority exactly 1 AuthorityAssignment
+
+
+### Focused category distinctions
+
+DisjointClasses:
+    AuthorityAssignment,
+    Decision
+
+DisjointClasses:
+    Decision,
+    DecisionOutcome
+
+DisjointClasses:
+    ExceptionRequest,
+    Decision
+
+DisjointClasses:
+    ExceptionRequest,
+    AuthorisedException
+
+DisjointClasses:
+    Escalation,
+    DecisionOutcome
+
+DisjointClasses:
+    DecisionRecommendation,
+    Decision
+
+# These are focused semantic commitments for this example rather than
+# claims about every possible governance ontology.
+

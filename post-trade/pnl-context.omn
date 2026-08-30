@@ -1,0 +1,266 @@
+Prefix: : <https://finsight-tech.com/ontology/examples/pnl-context#>
+Prefix: xsd: <http://www.w3.org/2001/XMLSchema#>
+
+Ontology: <https://finsight-tech.com/ontology/examples/pnl-context>
+
+
+# ************************************************************************
+# P&L Context
+# ************************************************************************
+#
+# Models P&L as a period-based analytical result rather than a bare change
+# in value. It separates P&L from valuation change, margin requirements,
+# collateral transfers, attribution results and later restatements.
+#
+
+Datatype: xsd:dateTime
+Datatype: xsd:decimal
+Datatype: xsd:string
+
+### Core financial subjects
+
+Class: FinancialThing
+
+Class: Position
+    SubClassOf: FinancialThing
+
+Class: Portfolio
+    SubClassOf: FinancialThing
+
+
+### Analytical measurements and results
+
+Class: AnalyticalMeasurement
+
+Class: AnalyticalResult
+
+Class: PnLMeasurement
+    SubClassOf: AnalyticalMeasurement
+
+Class: PnLResult
+    SubClassOf: AnalyticalResult
+
+ObjectProperty: produces
+    Domain: AnalyticalMeasurement
+    Range: AnalyticalResult
+
+ObjectProperty: pnlOf
+    Domain: PnLResult
+    Range: FinancialThing
+
+
+### P&L period
+
+DataProperty: periodStart
+    Domain: PnLResult
+    Range: xsd:dateTime
+
+DataProperty: periodEnd
+    Domain: PnLResult
+    Range: xsd:dateTime
+
+Class: PeriodPnLResult
+    SubClassOf:
+        PnLResult,
+        pnlOf exactly 1 FinancialThing,
+        periodStart exactly 1 xsd:dateTime,
+        periodEnd exactly 1 xsd:dateTime
+
+
+### Monetary result
+
+DataProperty: amount
+    Domain: PnLResult
+    Range: xsd:decimal
+
+Class: Currency
+
+ObjectProperty: currency
+    Domain: PnLResult
+    Range: Currency
+
+
+### Valuation inputs
+
+Class: ValuationResult
+    SubClassOf: AnalyticalResult
+
+ObjectProperty: usesOpeningValuation
+    Domain: PnLMeasurement
+    Range: ValuationResult
+
+ObjectProperty: usesClosingValuation
+    Domain: PnLMeasurement
+    Range: ValuationResult
+
+# Opening and closing valuations may contribute to P&L.
+# Their difference is not declared equivalent to P&L.
+
+
+### Other P&L inputs
+
+Class: PnLInput
+
+Class: CashflowInput
+    SubClassOf: PnLInput
+
+Class: TransactionInput
+    SubClassOf: PnLInput
+
+Class: FeeInput
+    SubClassOf: PnLInput
+
+Class: FinancingInput
+    SubClassOf: PnLInput
+
+ObjectProperty: usesPnLInput
+    Domain: PnLMeasurement
+    Range: PnLInput
+
+
+### P&L basis
+
+Class: PnLBasis
+
+Class: TradingPnLBasis
+    SubClassOf: PnLBasis
+
+Class: AccountingPnLBasis
+    SubClassOf: PnLBasis
+
+Class: EconomicPnLBasis
+    SubClassOf: PnLBasis
+
+ObjectProperty: usesPnLBasis
+    Domain: PnLMeasurement
+    Range: PnLBasis
+
+
+### Realisation treatment
+
+Class: RealisationTreatment
+
+Class: RealisedTreatment
+    SubClassOf: RealisationTreatment
+
+Class: UnrealisedTreatment
+    SubClassOf: RealisationTreatment
+
+ObjectProperty: classifiedUnder
+    Domain: PnLResult
+    Range: RealisationTreatment
+
+# Realised and unrealised are modelled as contextual classifications here,
+# not as mandatory subclasses of PnLResult.
+
+
+### Margin requirement
+
+Class: EconomicRequirement
+
+Class: MarginRequirement
+    SubClassOf: EconomicRequirement
+
+DataProperty: requiredAmount
+    Domain: MarginRequirement
+    Range: xsd:decimal
+
+# A MarginRequirement may be modelled more specifically as an obligation in
+# a broader collateral ontology. This file keeps that upper category open.
+
+
+### Collateral transfer
+
+Class: BusinessEvent
+
+Class: CollateralTransfer
+    SubClassOf: BusinessEvent
+
+DataProperty: transferredAmount
+    Domain: CollateralTransfer
+    Range: xsd:decimal
+
+ObjectProperty: appliedTo
+    Domain: CollateralTransfer
+    Range: MarginRequirement
+
+# appliedTo does not imply that the transfer fully discharges the requirement.
+
+
+### P&L attribution
+
+Class: PnLAttributionMeasurement
+    SubClassOf: AnalyticalMeasurement
+
+Class: PnLAttributionResult
+    SubClassOf: AnalyticalResult
+
+ObjectProperty: explains
+    Domain: PnLAttributionResult
+    Range: PnLResult
+
+Class: AttributionEffect
+
+Class: RatesEffect
+    SubClassOf: AttributionEffect
+
+Class: SpreadEffect
+    SubClassOf: AttributionEffect
+
+Class: CarryEffect
+    SubClassOf: AttributionEffect
+
+ObjectProperty: hasEffect
+    Domain: PnLAttributionResult
+    Range: AttributionEffect
+
+ObjectProperty: producesAttribution
+    Domain: PnLAttributionMeasurement
+    Range: PnLAttributionResult
+
+
+### Reported and restated results
+
+DataProperty: reportedAt
+    Domain: PnLResult
+    Range: xsd:dateTime
+
+DataProperty: calculatedAt
+    Domain: PnLResult
+    Range: xsd:dateTime
+
+ObjectProperty: restates
+    Domain: PnLResult
+    Range: PnLResult
+
+ObjectProperty: supersedes
+    Domain: PnLResult
+    Range: PnLResult
+
+# A later restated result does not erase the historically reported result.
+# Both may concern the same P&L period while having different calculation
+# and reporting contexts.
+
+
+### Focused context-rich P&L measurement
+
+Class: ContextualPnLMeasurement
+    SubClassOf:
+        PnLMeasurement,
+        usesOpeningValuation some ValuationResult,
+        usesClosingValuation some ValuationResult,
+        usesPnLBasis exactly 1 PnLBasis,
+        produces some PnLResult
+
+
+### Category distinctions
+
+DisjointClasses:
+    PnLResult,
+    MarginRequirement,
+    CollateralTransfer
+
+DisjointClasses:
+    PnLResult,
+    PnLAttributionResult
+

@@ -1,0 +1,439 @@
+Prefix: : <https://finsight-tech.com/ontology/examples/rule-applicability#>
+Prefix: xsd: <http://www.w3.org/2001/XMLSchema#>
+
+Ontology: <https://finsight-tech.com/ontology/examples/rule-applicability>
+
+
+# ************************************************************************
+# Rule Applicability
+# ************************************************************************
+#
+# Models a business rule separately from its expressions, implementations,
+# applicability assessment and evaluation. The example uses a settlement
+# rule based on the SSI applicable on the settlement date.
+#
+
+# Built-in datatypes used below. Declared because vscode-owl-ms resolves
+# definitions through documents and imports only, with no built-in
+# namespace handling.
+Datatype: xsd:dateTime
+Datatype: xsd:string
+
+
+### Financial domain concepts
+
+Class: SettlementInstruction
+
+Class: StandingSettlementInstruction
+
+Class: SettlementContext
+
+Class: SecuritiesSettlement
+    SubClassOf:
+        SettlementContext
+
+Class: Account
+
+Class: Organisation
+
+Class: SettlementException
+
+
+### Business rule
+
+Class: BusinessRule
+
+Class: SettlementSSIRule
+    SubClassOf:
+        BusinessRule
+
+# Example business meaning:
+#
+# Use the SSI applicable on the settlement date
+# unless an authorised exception exists.
+#
+# The rule itself is not modelled as executable Boolean logic.
+
+
+### Rule scope
+
+Class: RuleScope
+
+Class: SubjectScope
+    SubClassOf:
+        RuleScope
+
+Class: BusinessContextScope
+    SubClassOf:
+        RuleScope
+
+Class: OrganisationalScope
+    SubClassOf:
+        RuleScope
+
+ObjectProperty: hasScope
+    Domain: BusinessRule
+    Range: RuleScope
+
+ObjectProperty: governsType
+    Domain: SubjectScope
+
+ObjectProperty: appliesWithinContext
+    Domain: BusinessContextScope
+    Range: SettlementContext
+
+ObjectProperty: appliesForOrganisation
+    Domain: OrganisationalScope
+    Range: Organisation
+
+# Rule scope describes the kinds of situations a rule may govern.
+#
+# It is not the same thing as deciding whether the rule applies
+# to one particular case.
+
+
+### Effective period
+
+DataProperty: effectiveFrom
+    Domain: BusinessRule
+    Range: xsd:dateTime
+
+DataProperty: effectiveUntil
+    Domain: BusinessRule
+    Range: xsd:dateTime
+
+# effective
+#     !=
+# applicable
+#
+# A rule may be effective at a point in time but still not apply
+# to a particular situation because that situation is outside its scope.
+
+
+### Rule expressions
+
+Class: RuleExpression
+
+Class: NaturalLanguageRuleExpression
+    SubClassOf:
+        RuleExpression
+
+Class: DecisionTableRuleExpression
+    SubClassOf:
+        RuleExpression
+
+ObjectProperty: expressedBy
+    Domain: BusinessRule
+    Range: RuleExpression
+
+# One BusinessRule may have several expressions.
+#
+# BusinessRule
+#     !=
+# RuleExpression
+
+
+### Rule implementation
+
+Class: RuleImplementation
+
+Class: ExecutableRuleImplementation
+    SubClassOf:
+        RuleImplementation
+
+ObjectProperty: implementedBy
+    Domain: BusinessRule
+    Range: RuleImplementation
+
+# Executable logic is treated separately from the institutional rule.
+#
+# BusinessRule
+#     !=
+# RuleExpression
+#     !=
+# RuleImplementation
+
+
+### Rule applicability assessment
+
+Class: RuleApplicabilityAssessment
+
+Class: ApplicableAssessment
+    SubClassOf:
+        RuleApplicabilityAssessment
+
+Class: NotApplicableAssessment
+    SubClassOf:
+        RuleApplicabilityAssessment
+
+DisjointClasses:
+    ApplicableAssessment,
+    NotApplicableAssessment
+
+ObjectProperty: assessesRule
+    Domain: RuleApplicabilityAssessment
+    Range: BusinessRule
+
+ObjectProperty: assessesSituation
+    Domain: RuleApplicabilityAssessment
+
+# RuleApplicabilityAssessment answers:
+#
+#     Does this rule apply to this situation?
+#
+# It is deliberately separate from RuleEvaluation.
+
+
+### Rule evaluation
+
+Class: RuleEvaluation
+
+ObjectProperty: evaluatesRule
+    Domain: RuleEvaluation
+    Range: BusinessRule
+
+ObjectProperty: evaluatesSituation
+    Domain: RuleEvaluation
+
+ObjectProperty: basedOnApplicabilityAssessment
+    Domain: RuleEvaluation
+    Range: ApplicableAssessment
+
+# A rule should normally be evaluated only after it has been
+# established as applicable to the situation.
+
+
+### Evaluation result
+
+Class: RuleEvaluationResult
+
+Class: ConditionSatisfiedResult
+    SubClassOf:
+        RuleEvaluationResult
+
+Class: ConditionNotSatisfiedResult
+    SubClassOf:
+        RuleEvaluationResult
+
+ObjectProperty: producesEvaluationResult
+    Domain: RuleEvaluation
+    Range: RuleEvaluationResult
+
+DisjointClasses:
+    ConditionSatisfiedResult,
+    ConditionNotSatisfiedResult
+
+# A condition not being satisfied is not automatically the same
+# thing as a rule violation.
+
+
+### Normative outcome
+
+Class: RuleOutcome
+
+Class: ConformingOutcome
+    SubClassOf:
+        RuleOutcome
+
+Class: InvestigationRequiredOutcome
+    SubClassOf:
+        RuleOutcome
+
+Class: ViolationOutcome
+    SubClassOf:
+        RuleOutcome
+
+Class: ExceptionPermittedOutcome
+    SubClassOf:
+        RuleOutcome
+
+ObjectProperty: hasRuleOutcome
+    Domain: RuleEvaluation
+    Range: RuleOutcome
+
+# Evaluation result
+#     !=
+# normative outcome
+#
+# For example, an account comparison may fail while an authorised
+# exception still makes the situation permissible.
+
+
+### Exceptions
+
+Class: AuthorisedException
+    SubClassOf:
+        SettlementException
+
+ObjectProperty: considersException
+    Domain: RuleEvaluation
+    Range: SettlementException
+
+# This file deliberately does not assume that all exceptions work
+# in the same way.
+#
+# Some exceptions may be part of the rule's own satisfaction conditions.
+# Others may operate as separately authorised waivers or overrides.
+
+
+### Authority
+
+Class: OrganisationalRole
+
+Class: OperationsManagerRole
+    SubClassOf:
+        OrganisationalRole
+
+Class: AuthorityAssignment
+
+ObjectProperty: grantsAuthorityTo
+    Domain: AuthorityAssignment
+    Range: OrganisationalRole
+
+ObjectProperty: authorityFor
+    Domain: AuthorityAssignment
+
+ObjectProperty: authorisedBy
+    Domain: AuthorisedException
+    Range: AuthorityAssignment
+
+# Authority is kept separate from the BusinessRule itself.
+#
+# Knowing that an exception may be reasonable does not imply that
+# the person or system considering it has authority to approve it.
+
+
+### Policy
+
+Class: Policy
+
+ObjectProperty: supportsPolicy
+    Domain: BusinessRule
+    Range: Policy
+
+# Policy
+#     !=
+# BusinessRule
+#
+# Policy gives broader institutional direction.
+# BusinessRule expresses a more specific normative requirement.
+
+
+### Control definition
+
+Class: ControlDefinition
+
+ObjectProperty: supportsAssessmentOf
+    Domain: ControlDefinition
+    Range: BusinessRule
+
+# A control definition may support assessment of a rule.
+#
+# It is not declared to be identical to the rule and need not
+# evaluate every aspect of the rule.
+
+
+### Settlement-specific rule scope
+
+Class: SettlementInstructionSubjectScope
+    SubClassOf:
+        SubjectScope,
+        governsType some SettlementInstruction
+
+Class: SecuritiesSettlementBusinessScope
+    SubClassOf:
+        BusinessContextScope,
+        appliesWithinContext some SecuritiesSettlement
+
+Class: SettlementSSIApplicabilityRule
+    SubClassOf:
+        SettlementSSIRule,
+        hasScope some SettlementInstructionSubjectScope,
+        hasScope some SecuritiesSettlementBusinessScope
+
+# This scoped class says what kind of situation the rule may govern.
+#
+# It does NOT say that the rule applies to every SettlementInstruction.
+
+
+### SSI temporal applicability
+
+ObjectProperty: applicableSSI
+    Domain: SettlementInstruction
+    Range: StandingSettlementInstruction
+
+ObjectProperty: usesSettlementAccount
+    Domain: SettlementInstruction
+    Range: Account
+
+ObjectProperty: specifiesSettlementAccount
+    Domain: StandingSettlementInstruction
+    Range: Account
+
+DataProperty: ssiEffectiveFrom
+    Domain: StandingSettlementInstruction
+    Range: xsd:dateTime
+
+DataProperty: ssiEffectiveUntil
+    Domain: StandingSettlementInstruction
+    Range: xsd:dateTime
+
+DataProperty: settlementDate
+    Domain: SettlementInstruction
+    Range: xsd:dateTime
+
+# There are two separate temporal questions in this example:
+#
+# 1. Which BusinessRule is effective and applicable?
+#
+# 2. Which StandingSettlementInstruction is applicable
+#    on the settlement date?
+#
+# "Applicable rule" and "applicable SSI" are different semantics.
+
+
+### Rule specification and versioning
+
+Class: RuleSpecification
+
+ObjectProperty: specificationOf
+    Domain: RuleSpecification
+    Range: BusinessRule
+
+DataProperty: ruleVersionIdentifier
+    Domain: RuleSpecification
+    Range: xsd:string
+
+DataProperty: specificationEffectiveFrom
+    Domain: RuleSpecification
+    Range: xsd:dateTime
+
+DataProperty: specificationEffectiveUntil
+    Domain: RuleSpecification
+    Range: xsd:dateTime
+
+# Rule versioning is kept separate from rule identity.
+#
+# Two specifications do not automatically imply two different rules.
+# Whether a normative change creates a new rule identity is a
+# separate modelling decision.
+
+
+### Focused category distinctions
+
+DisjointClasses:
+    BusinessRule,
+    RuleExpression,
+    RuleImplementation,
+    RuleApplicabilityAssessment,
+    RuleEvaluation,
+    RuleEvaluationResult
+
+DisjointClasses:
+    Policy,
+    BusinessRule
+
+DisjointClasses:
+    BusinessRule,
+    ControlDefinition
+

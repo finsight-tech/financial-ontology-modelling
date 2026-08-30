@@ -1,0 +1,193 @@
+Prefix: : <https://finsight-tech.com/ontology/examples/lifecycle-lineage#>
+
+Ontology: <https://finsight-tech.com/ontology/examples/lifecycle-lineage>
+
+
+# ************************************************************************
+# Financial Lifecycle Lineage
+# ************************************************************************
+#
+# Integrates pre-trade artefacts, business events, lifecycle conditions,
+# temporal qualification, identity-preserving amendment and successor
+# lineage. The example deliberately does not introduce Lifecycle as a class.
+#
+
+
+### Core financial things
+
+Class: FinancialThing
+
+Class: Trade
+    SubClassOf: FinancialThing
+
+Class: FinancialContract
+    SubClassOf: FinancialThing
+
+Class: Settlement
+    SubClassOf: FinancialThing
+
+Class: PaymentObligation
+    SubClassOf: FinancialThing
+
+Class: TradeTerms
+
+
+### Pre-trade business artefacts
+
+Class: BusinessArtefact
+
+Class: RequestForQuote
+    SubClassOf: BusinessArtefact
+
+Class: Quote
+    SubClassOf: BusinessArtefact
+
+Class: Order
+    SubClassOf: BusinessArtefact
+
+
+### Business events
+
+Class: BusinessEvent
+
+Class: TradeExecution
+    SubClassOf: BusinessEvent
+
+Class: AmendmentEvent
+    SubClassOf: BusinessEvent
+
+Class: NovationEvent
+    SubClassOf: BusinessEvent
+
+Class: Payment
+    SubClassOf: BusinessEvent
+
+
+### Temporal concepts
+
+Class: TimeInstant
+
+Class: TimePeriod
+
+ObjectProperty: occurredAt
+    Domain: BusinessEvent
+    Range: TimeInstant
+
+ObjectProperty: effectiveFrom
+    Domain: TradeTerms
+    Range: TimeInstant
+
+ObjectProperty: validDuring
+    Range: TimePeriod
+
+
+### Pre-trade lineage into trade formation
+
+ObjectProperty: respondsTo
+    Domain: Quote
+    Range: RequestForQuote
+
+ObjectProperty: basedOnQuote
+    Domain: Order
+    Range: Quote
+
+ObjectProperty: executesOrder
+    Domain: TradeExecution
+    Range: Order
+
+ObjectProperty: resultsInTrade
+    Domain: TradeExecution
+    Range: Trade
+
+
+### Trade and contractual arrangement
+
+ObjectProperty: hasContractualArrangement
+    Domain: Trade
+    Range: FinancialContract
+
+
+### Identity-preserving amendment
+
+ObjectProperty: amends
+    Domain: AmendmentEvent
+    Range: Trade
+
+ObjectProperty: establishesTerms
+    Domain: AmendmentEvent
+    Range: TradeTerms
+
+ObjectProperty: termsOf
+    Domain: TradeTerms
+    Range: Trade
+
+Class: TradeAmendment
+    SubClassOf:
+        AmendmentEvent,
+        amends exactly 1 Trade
+
+
+### Settlement lifecycle condition
+
+Class: LifecycleCondition
+
+Class: SettlementCondition
+    SubClassOf: LifecycleCondition
+
+Class: OutstandingSettlementCondition
+    SubClassOf: SettlementCondition
+
+Class: SettledSettlementCondition
+    SubClassOf: SettlementCondition
+
+Class: SettlementConditionEpisode
+    SubClassOf:
+        conditionOf exactly 1 Settlement,
+        hasCondition exactly 1 SettlementCondition
+
+ObjectProperty: conditionOf
+    Domain: SettlementConditionEpisode
+    Range: Settlement
+
+ObjectProperty: hasCondition
+    Domain: SettlementConditionEpisode
+    Range: SettlementCondition
+
+Class: TemporallyQualifiedSettlementConditionEpisode
+    SubClassOf:
+        SettlementConditionEpisode,
+        validDuring exactly 1 TimePeriod
+
+
+### Payment in the lifecycle
+
+ObjectProperty: appliedTo
+    Domain: Payment
+    Range: PaymentObligation
+
+
+### Identity-breaking change and successor lineage
+
+ObjectProperty: endsContract
+    Domain: NovationEvent
+    Range: FinancialContract
+
+ObjectProperty: establishesContract
+    Domain: NovationEvent
+    Range: FinancialContract
+
+ObjectProperty: succeededBy
+    Domain: FinancialContract
+    Range: FinancialContract
+    InverseOf: precededBy
+
+ObjectProperty: precededBy
+    Domain: FinancialContract
+    Range: FinancialContract
+
+Class: ContractNovation
+    SubClassOf:
+        NovationEvent,
+        endsContract exactly 1 FinancialContract,
+        establishesContract min 1 FinancialContract
+
